@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import api from '../services/api';
 import AdminSidebar from '../Components/AdminSidebar';
+import ManageProfileModal from '../Components/ManageProfileModal';
 
 const SidebarLink = ({ icon, label, active }) => (
   <div className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
@@ -66,6 +67,7 @@ const AdminDashboard = () => {
   const [recentUsers, setRecentUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
 
@@ -122,6 +124,15 @@ const AdminDashboard = () => {
                 </button>
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setProfileModalOpen(true);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)]"
+                    >
+                      Manage Profile
+                    </button>
                     <button
                       onClick={() => {
                         setProfileOpen(false);
@@ -282,6 +293,12 @@ const AdminDashboard = () => {
           )}
         </main>
       </div>
+      
+      <ManageProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        user={user}
+      />
     </div>
   );
 };

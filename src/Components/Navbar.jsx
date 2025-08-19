@@ -45,12 +45,12 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
             {!isAuthenticated ? (
               // Show Login/Signup when not authenticated
               <>
-                <button 
+                {/* <button 
                   onClick={onShowLogin}
                   className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium px-4 py-2 rounded-lg border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] transition-colors"
                 >
                   Login
-                </button>
+                </button> */}
                 <button 
                   onClick={onShowSignup}
                   className="ag-cta-gradient text-white px-6 py-2 rounded-lg hover:opacity-95 transition-opacity font-medium shadow-md"

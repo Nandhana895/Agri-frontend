@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User } from 'lucide-react';
 import authService from '../services/authService';
 
+const navItems = [
+  { to: '/dashboard', label: 'Home', icon: HomeIcon },
+  { to: '/dashboard/crop-recommendation', label: 'Crop Recommendation', icon: Leaf },
+  { to: '/dashboard/soil-health', label: 'Soil Health Analyzer', icon: Sprout },
+  { to: '/dashboard/fertilizer', label: 'Fertilizer Calculator', icon: Calculator },
+  { to: '/dashboard/crop-profiles', label: 'Crop Profiles', icon: BarChart3 },
+  { to: '/dashboard/chat', label: 'Chatbox', icon: MessageSquare },
+  { to: '/dashboard/reports', label: 'Reports', icon: FileText },
+];
+
 const Dashboard = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-    }
+    setUser(authService.getCurrentUser());
   }, []);
 
   const handleLogout = () => {
@@ -18,56 +30,75 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div className="min-h-screen bg-[var(--ag-muted)]">
-      <nav className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-[var(--ag-border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg ag-cta-gradient text-white flex items-center justify-center">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                </svg>
-              </div>
-              <h1 className="ag-display text-xl font-semibold text-gray-900">Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Welcome, {user.name}!{user.role === 'admin' ? ' (Admin)' : ''}</span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)] transition-colors"
-              >
-                Logout
+    <div className="min-h-screen bg-[var(--ag-muted)] flex">
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -240, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+        className={`${isSidebarOpen ? 'w-64' : 'w-0'} bg-white border-r border-[var(--ag-border)] hidden md:block`}
+      >
+        <div className="h-16 flex items-center gap-2 px-4 border-b border-[var(--ag-border)]">
+          <div className="w-9 h-9 rounded-lg ag-cta-gradient text-white flex items-center justify-center">
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a4 4 0 00-4 4v1H4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-2V6a4 4 0 00-4-4z"/></svg>
+          </div>
+          <span className="ag-display text-lg font-semibold text-gray-900">AgriSense</span>
+        </div>
+        <nav className="p-3 space-y-1">
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const active = location.pathname === to;
+            return (
+              <Link key={to} to={to} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
+                <Icon className="w-5 h-5" />
+                <span className="truncate">{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </motion.aside>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        {/* Topbar */}
+        <header className="bg-white/80 backdrop-blur border-b border-[var(--ag-border)] sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button className="md:hidden p-2" onClick={() => setIsSidebarOpen((v) => !v)}>
+                <Menu className="w-5 h-5 text-gray-700" />
               </button>
+              <h1 className="ag-display text-xl font-semibold text-gray-900">Farmer Dashboard</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)]">
+                <Bell className="w-5 h-5 text-gray-700" />
+              </button>
+              <div className="relative">
+                <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)]">
+                  <User className="w-4 h-4" />
+                  <span>{user?.name || 'Farmer'}</span>
+                  <svg className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
+                    <div className="px-4 py-2 text-sm text-gray-600">Signed in as<br />{user?.email}</div>
+                    <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] flex items-center gap-2">
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
+        </header>
 
-      <main className="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 px-4 sm:px-0">
-          <div className="ag-card p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Account</h3>
-            <p className="mt-2 text-gray-600">Signed in as {user.email}</p>
-          </div>
-
-          <div className="ag-card p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Crop Health</h3>
-            <p className="mt-2 text-gray-600">Add sensors and monitor field conditions.</p>
-          </div>
-
-          <div className="ag-card p-6">
-            <h3 className="text-lg font-semibold text-gray-900">Weather</h3>
-            <p className="mt-2 text-gray-600">Connect your location to see forecasts.</p>
-          </div>
-        </div>
-      </main>
+        {/* Routed content */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

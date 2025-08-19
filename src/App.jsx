@@ -4,6 +4,13 @@ import Landing from './Pages/landing';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
+import Home from './Pages/UserDashboard/Home';
+import CropRecommendation from './Pages/UserDashboard/CropRecommendation';
+import SoilAnalyzer from './Pages/UserDashboard/SoilAnalyzer';
+import FertilizerCalculator from './Pages/UserDashboard/FertilizerCalculator';
+import CropProfiles from './Pages/UserDashboard/CropProfiles';
+import Chatbox from './Pages/UserDashboard/Chatbox';
+import Reports from './Pages/UserDashboard/Reports';
 import AdminDashboard from './Pages/AdminDashboard';
 import ProtectedRoute from './Components/ProtectedRoute';
 import authService from './services/authService';
@@ -139,15 +146,23 @@ function App() {
             } 
           />
           
-          {/* Protected dashboard route */}
+          {/* Protected farmer dashboard with nested routes */}
           <Route 
-            path="/dashboard" 
+            path="/dashboard/*" 
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
-          />
+            }
+          >
+            <Route index element={<Home />} />
+            <Route path="crop-recommendation" element={<CropRecommendation />} />
+            <Route path="soil-health" element={<SoilAnalyzer />} />
+            <Route path="fertilizer" element={<FertilizerCalculator />} />
+            <Route path="crop-profiles" element={<CropProfiles />} />
+            <Route path="chat" element={<Chatbox />} />
+            <Route path="reports" element={<Reports />} />
+          </Route>
 
           {/* Admin dashboard route */}
           <Route 
