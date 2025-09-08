@@ -16,6 +16,20 @@ class AuthService {
     }
   }
 
+  // Login via Google ID token
+  async loginWithGoogle(idToken) {
+    try {
+      const response = await api.post('/auth/google', { idToken });
+      if (response.data.token) {
+        localStorage.setItem(config.TOKEN_KEY, response.data.token);
+        localStorage.setItem(config.USER_KEY, JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Google login failed' };
+    }
+  }
+
   // Signup user
   async signup(name, email, password, confirmPassword) {
     try {
@@ -57,6 +71,7 @@ class AuthService {
   getToken() {
     return localStorage.getItem(config.TOKEN_KEY);
   }
+
 }
 
 export default new AuthService(); 

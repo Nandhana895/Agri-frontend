@@ -5,6 +5,7 @@ import api from '../services/api';
 import AdminSidebar from '../Components/AdminSidebar';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import UserManagement from '../Components/UserManagement';
+import CropManagement from '../Components/CropManagement';
 
 const SidebarLink = ({ icon, label, active }) => (
   <div className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
@@ -64,7 +65,10 @@ const MiniBarChart = ({ values }) => {
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [stats, setStats] = useState({ totalUsers: 0, adminCount: 0, newUsers7d: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, adminCount: 0, newUsers7d: 0, blockedUsers: 0, inactiveUsers: 0 });
+  const [liveStats, setLiveStats] = useState({ totalUsers: 0, activeUsers: 0, blockedUsers: 0, inactiveUsers: 0, activeQueries: 0, pendingRecommendations: 0 });
+  const [dataHealth, setDataHealth] = useState({ usersWithIssues: 0, usersMissingSoilProfile: 0, notes: '' });
+  const [logs, setLogs] = useState([]);
   const [recentUsers, setRecentUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -80,6 +84,14 @@ const AdminDashboard = () => {
         setRecentUsers(res.data?.recentUsers || []);
         const usersRes = await api.get('/admin/users?limit=50');
         setAllUsers(usersRes.data?.users || []);
+        const [statsRes, healthRes, logsRes] = await Promise.all([
+          api.get('/admin/stats'),
+          api.get('/admin/data-health'),
+          api.get('/admin/logs?limit=10')
+        ]);
+        setLiveStats(statsRes.data?.stats || {});
+        setDataHealth(healthRes.data?.health || {});
+        setLogs(logsRes.data?.logs || []);
       } catch (e) {
         setError(e?.response?.data?.message || 'Failed to load admin data');
       } finally {
@@ -87,6 +99,13 @@ const AdminDashboard = () => {
       }
     };
     fetchData();
+    const interval = setInterval(async () => {
+      try {
+        const statsRes = await api.get('/admin/stats');
+        setLiveStats(statsRes.data?.stats || {});
+      } catch (_) {}
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const user = authService.getCurrentUser();
@@ -158,6 +177,9 @@ const AdminDashboard = () => {
             <StatCard label="Total Users" value={stats.totalUsers} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5V9H2v11h5m10 0V9m0 11V9M7 20V9"/></svg>} />
             <StatCard label="Admins" value={stats.adminCount} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7a4 4 0 118 0 4 4 0 01-8 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>} />
             <StatCard label="New in 7d" value={stats.newUsers7d} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7H7v6m0 0h6m-6 0l8 8"/></svg>} />
+            <StatCard label="Active Users" value={liveStats.activeUsers} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c-3.866 0-7 3.134-7 7"/></svg>} />
+            <StatCard label="Blocked Users" value={stats.blockedUsers} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 6L6 18"/></svg>} />
+            <StatCard label="Inactive Users" value={stats.inactiveUsers} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
@@ -172,6 +194,68 @@ const AdminDashboard = () => {
                 <h2 className="text-lg font-semibold text-gray-900">Irrigation Usage</h2>
               </div>
               <MiniBarChart values={irrigationUsage} />
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">System Activity</h2>
+                <span className="text-sm text-gray-500">updates every 10s</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="ag-stat-tile"><div className="text-sm text-gray-600">Active Queries</div><div className="text-2xl font-semibold">{liveStats.activeQueries}</div></div>
+                <div className="ag-stat-tile"><div className="text-sm text-gray-600">Pending Recs</div><div className="text-2xl font-semibold">{liveStats.pendingRecommendations}</div></div>
+              </div>
+            </div>
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Data Health</h2>
+              </div>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div>Users with issues: <span className="font-semibold">{dataHealth.usersWithIssues}</span></div>
+                <div>Missing soil profiles: <span className="font-semibold">{dataHealth.usersMissingSoilProfile}</span></div>
+                <div className="text-gray-500">{dataHealth.notes}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Admin Controls</h2>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={async () => { try { await api.post('/admin/ml/retrain'); alert('Retrain triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
+                  className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]"
+                >Trigger Model Retrain</button>
+                <button
+                  onClick={async () => { try { await api.post('/admin/ml/refresh-recommendations'); alert('Refresh triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                >Refresh Recommendations</button>
+                <button
+                  onClick={() => { window.open(`${api.defaults.baseURL}/admin/reports/analytics.csv`, '_blank'); }}
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+                >Download Analytics (CSV)</button>
+              </div>
+            </div>
+            <div className="ag-card overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
+                <h2 className="font-semibold text-gray-900">Recent Admin Logs</h2>
+              </div>
+              <div className="divide-y divide-[var(--ag-border)] max-h-64 overflow-auto">
+                {logs.length === 0 && <div className="p-4 text-gray-600">No logs yet.</div>}
+                {logs.map((log) => (
+                  <div key={log._id} className="p-4 text-sm text-gray-700 flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{log.action}</div>
+                      <div className="text-gray-500">{new Date(log.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div className="text-gray-500">{log.targetType}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -238,9 +322,11 @@ const AdminDashboard = () => {
 
           {activeTab === 'crops' && (
             <div className="px-4 sm:px-0">
+              {/* Crop Management */}
               <div className="ag-card p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Crop Database</h2>
-                <p className="text-gray-600">Coming soon: manage crops, ideal soil, NPK ranges, and sowing times.</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Crop Management</h2>
+                <p className="text-gray-600 mb-6">Create and manage crops with description, cultivation details, and image.</p>
+                <CropManagement />
               </div>
             </div>
           )}

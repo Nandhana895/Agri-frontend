@@ -13,6 +13,7 @@ const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
 
@@ -47,6 +48,24 @@ const UserManagement = () => {
     e.preventDefault();
     setCurrentPage(1);
     fetchUsers(1, searchTerm);
+  };
+
+  const toggleSelect = (userId) => {
+    setSelectedIds((prev) => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]);
+  };
+
+  const handleBulkStatus = async (isActive) => {
+    try {
+      if (selectedIds.length === 0) return;
+      setActionLoading(true);
+      await api.post('/admin/users/bulk-status', { userIds: selectedIds, isActive });
+      setSelectedIds([]);
+      fetchUsers(currentPage, searchTerm);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Bulk action failed');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handlePageChange = (page) => {
@@ -197,6 +216,20 @@ const UserManagement = () => {
           >
             Search
           </button>
+          <div className="flex gap-2 ml-auto">
+            <button
+              type="button"
+              disabled={selectedIds.length === 0 || actionLoading}
+              onClick={() => handleBulkStatus(true)}
+              className="px-3 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50"
+            >Activate Selected</button>
+            <button
+              type="button"
+              disabled={selectedIds.length === 0 || actionLoading}
+              onClick={() => handleBulkStatus(false)}
+              className="px-3 py-2 bg-gray-700 text-white rounded-lg disabled:opacity-50"
+            >Deactivate Selected</button>
+          </div>
         </form>
       </div>
 
@@ -213,6 +246,9 @@ const UserManagement = () => {
           <table className="w-full">
             <thead className="bg-[var(--ag-muted)] border-b border-[var(--ag-border)]">
               <tr>
+                <th className="px-6 py-3">
+                  
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
@@ -241,6 +277,13 @@ const UserManagement = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="hover:bg-gray-50"
                 >
+                  <td className="px-6 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(user._id)}
+                      onChange={() => toggleSelect(user._id)}
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full bg-[var(--ag-primary-500)] text-white flex items-center justify-center">

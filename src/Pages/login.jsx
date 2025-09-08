@@ -43,6 +43,49 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
     return () => { clearTimeout(t); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, []);
 
+  // Load Google Identity Services script and render button
+  useEffect(() => {
+    const id = 'google-identity-services';
+    if (!document.getElementById(id)) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true; s.id = id;
+      document.body.appendChild(s);
+    }
+    const t = setInterval(() => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        clearInterval(t);
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        if (!clientId) return;
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: async (resp) => {
+              try {
+                const result = await authService.loginWithGoogle(resp.credential);
+                if (onAuthSuccess) onAuthSuccess();
+                else if (onClose) onClose();
+                const target = result?.user?.role === 'admin' ? '/admin' : '/dashboard';
+                navigate(target, { replace: true });
+              } catch (err) {
+                setError(err.message || 'Google login failed');
+              }
+            },
+            ux_mode: 'popup',
+            use_fedcm_for_prompt: false
+          });
+          const container = document.getElementById('googleLoginBtn');
+          if (container) {
+            container.innerHTML = '';
+            window.google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', text: 'signin_with' });
+          }
+        } catch (_) {}
+      }
+    }, 200);
+    return () => clearInterval(t);
+  }, [onAuthSuccess, onClose, navigate]);
+
+
   // Strict email validation: no consecutive dots, valid labels, TLD >= 2
   const validateEmail = (value) => {
     if (!value) return 'Email is required';
@@ -103,6 +146,7 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
       onClose();
     }
   };
+
 
   const handleSwitchToSignup = () => {
     console.log('Switching to signup');
@@ -235,6 +279,17 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="mt-4">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--ag-border)]" />
+            <div className="text-xs text-gray-500">OR</div>
+            <div className="h-px flex-1 bg-[var(--ag-border)]" />
+          </div>
+          <div className="mt-3 flex justify-center">
+            <div id="googleLoginBtn" />
+          </div>
+        </div>
 
         <div className="mt-4 text-center">
           <p className="text-gray-600">

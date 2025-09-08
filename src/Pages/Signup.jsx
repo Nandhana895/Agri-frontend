@@ -36,6 +36,7 @@ const Signup = ({ onClose, onSwitchToLogin, onAuthSuccess }) => {
   const emailRef = useRef(null);
   const pwdRef = useRef(null);
   const confirmRef = useRef(null);
+  const [googleReady, setGoogleReady] = useState(false);
 
   // Reset any persisted/autofilled values when the modal mounts
   useEffect(() => {
@@ -59,6 +60,52 @@ const Signup = ({ onClose, onSwitchToLogin, onAuthSuccess }) => {
     const t4 = setTimeout(() => setInputsEnabled(true), 800);
     return () => { clearTimeout(t); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, []);
+
+  // Load Google Identity Services script
+  useEffect(() => {
+    const id = 'google-identity-services';
+    if (!document.getElementById(id)) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true; s.defer = true; s.id = id;
+      document.body.appendChild(s);
+    }
+    const t = setInterval(() => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        clearInterval(t);
+        setGoogleReady(true);
+      }
+    }, 200);
+    return () => clearInterval(t);
+  }, []);
+
+  // Initialize and render Google button when script ready
+  useEffect(() => {
+    if (!googleReady) return;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+    try {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (resp) => {
+          try {
+            const result = await authService.loginWithGoogle(resp.credential);
+            if (onAuthSuccess) onAuthSuccess();
+            else if (onClose) onClose();
+          } catch (err) {
+            setError(err.message || 'Google signup failed');
+          }
+        },
+        ux_mode: 'popup',
+        use_fedcm_for_prompt: false
+      });
+      const container = document.getElementById('googleSignupBtn');
+      if (container) {
+        container.innerHTML = '';
+        window.google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', text: 'signup_with' });
+      }
+    } catch (_) {}
+  }, [googleReady]);
 
   const validateName = (value) => {
     if (!value) return 'Full name is required';
@@ -160,6 +207,8 @@ const Signup = ({ onClose, onSwitchToLogin, onAuthSuccess }) => {
       setLoading(false);
     }
   };
+
+  
 
   const isFormValid =
     !validateName(formData.name) && !validateEmail(formData.email) &&
@@ -297,6 +346,17 @@ const Signup = ({ onClose, onSwitchToLogin, onAuthSuccess }) => {
             {loading ? 'Signing up...' : 'Sign Up'}
           </button>
         </form>
+
+        <div className="mt-4">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-[var(--ag-border)]" />
+            <div className="text-xs text-gray-500">OR</div>
+            <div className="h-px flex-1 bg-[var(--ag-border)]" />
+          </div>
+          <div className="mt-3 flex justify-center">
+            <div id="googleSignupBtn" />
+          </div>
+        </div>
 
         <div className="mt-4 text-center">
           <p className="text-gray-600">
