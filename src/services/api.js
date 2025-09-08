@@ -29,9 +29,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem(config.TOKEN_KEY);
-      window.location.href = '/login';
+      // If a token exists, force logout and redirect. Otherwise (e.g., during login), let the caller handle the message.
+      const hasToken = Boolean(localStorage.getItem(config.TOKEN_KEY));
+      if (hasToken) {
+        try { localStorage.removeItem(config.TOKEN_KEY); } catch (_) {}
+        try { localStorage.removeItem(config.USER_KEY); } catch (_) {}
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

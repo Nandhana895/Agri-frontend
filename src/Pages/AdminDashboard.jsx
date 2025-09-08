@@ -4,6 +4,7 @@ import authService from '../services/authService';
 import api from '../services/api';
 import AdminSidebar from '../Components/AdminSidebar';
 import ManageProfileModal from '../Components/ManageProfileModal';
+import UserManagement from '../Components/UserManagement';
 
 const SidebarLink = ({ icon, label, active }) => (
   <div className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
@@ -202,6 +203,7 @@ const AdminDashboard = () => {
                     <th className="px-4 py-2">Name</th>
                     <th className="px-4 py-2">Email</th>
                     <th className="px-4 py-2">Role</th>
+                    <th className="px-4 py-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,6 +212,15 @@ const AdminDashboard = () => {
                       <td className="px-4 py-2 font-medium text-gray-900">{u.name}</td>
                       <td className="px-4 py-2 text-gray-700">{u.email}</td>
                       <td className="px-4 py-2 capitalize text-gray-700">{u.role}</td>
+                      <td className="px-4 py-2">
+                        {u.isBlocked ? (
+                          <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Blocked</span>
+                        ) : u.isActive === false ? (
+                          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Inactive</span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -221,29 +232,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'users' && (
             <div className="px-4 sm:px-0">
-              <div className="ag-card overflow-hidden">
-                <div className="flex items-center justify-between p-4 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
-                  <h2 className="font-semibold text-gray-900">Users</h2>
-                </div>
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-[var(--ag-muted)] border-b border-[var(--ag-border)]">
-                    <tr>
-                      <th className="px-4 py-2">Name</th>
-                      <th className="px-4 py-2">Email</th>
-                      <th className="px-4 py-2">Role</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allUsers.map((u) => (
-                      <tr key={u._id} className="border-b border-[var(--ag-border)]">
-                        <td className="px-4 py-2 font-medium text-gray-900">{u.name}</td>
-                        <td className="px-4 py-2 text-gray-700">{u.email}</td>
-                        <td className="px-4 py-2 capitalize text-gray-700">{u.role}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <UserManagement />
             </div>
           )}
 

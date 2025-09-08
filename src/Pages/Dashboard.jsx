@@ -21,6 +21,8 @@ const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+
+
   useEffect(() => {
     setUser(authService.getCurrentUser());
   }, []);

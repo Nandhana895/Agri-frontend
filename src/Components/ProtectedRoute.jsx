@@ -10,11 +10,15 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     return <Navigate to="/" replace />;
   }
 
-  if (requireAdmin) {
-    const user = authService.getCurrentUser();
-    if (!user || user.role !== 'admin') {
-      return <Navigate to="/" replace />;
-    }
+  const user = authService.getCurrentUser();
+
+  // Blocked or deactivated users should not access any protected route
+  if (!user || user.isBlocked || user.isActive === false) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requireAdmin && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return children;
