@@ -1,30 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-
-const data = [
-  { name: 'Wheat', img: 'https://images.unsplash.com/photo-1500937382192-6c0f7b43a3ec?q=80&w=800&auto=format&fit=crop', desc: 'Cool-season cereal crop, prefers loamy soil.' },
-  { name: 'Rice', img: 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?q=80&w=800&auto=format&fit=crop', desc: 'Requires flooded fields and warm climate.' },
-  { name: 'Maize', img: 'https://images.unsplash.com/photo-1561753799-0ffc6273b6fb?q=80&w=800&auto=format&fit=crop', desc: 'Thrives in well-drained fertile soil.' },
-  { name: 'Soybean', img: 'https://images.unsplash.com/photo-1530176611600-c3b2ee5b7883?q=80&w=800&auto=format&fit=crop', desc: 'Fixes nitrogen and improves soil fertility.' },
-];
+import api from '../../services/api';
 
 const CropProfiles = () => {
+  const [crops, setCrops] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchCrops = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get('/farmer/crop-profiles');
+        setCrops(res.data?.data || []);
+      } catch (e) {
+        setError(e?.response?.data?.message || 'Failed to load crop profiles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCrops();
+  }, []);
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-600">{error}</div>;
+
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {data.map((c) => (
-        <motion.div key={c.name} className="ag-card overflow-hidden" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <img src={c.img} alt={c.name} className="h-40 w-full object-cover" />
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-900">{c.name}</h3>
-            <p className="text-gray-600 text-sm mt-1">{c.desc}</p>
-            <ul className="text-sm text-gray-700 mt-3 list-disc pl-5 space-y-1">
-              <li>Optimal spacing: 20-25 cm</li>
-              <li>Irrigation: Moderate</li>
-              <li>Harvest: 90-120 days</li>
-            </ul>
-          </div>
-        </motion.div>
-      ))}
+      {crops.length === 0 && (
+        <div className="text-gray-600">No crops available yet.</div>
+      )}
+      {crops.map((c) => {
+        const base = (api.defaults.baseURL || '').replace(/\/?api\/?$/, '');
+        const imageSrc = c.imageUrl && !c.imageUrl.startsWith('http')
+          ? `${base}${c.imageUrl}`
+          : (c.imageUrl || '');
+        return (
+          <motion.div key={c._id} className="ag-card overflow-hidden" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+            {imageSrc ? (
+              <img src={imageSrc} alt={c.name} className="h-40 w-full object-cover" />
+            ) : (
+              <div className="h-40 w-full bg-gray-100" />
+            )}
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-gray-900">{c.name}</h3>
+              {c.description && <p className="text-gray-600 text-sm mt-1">{c.description}</p>}
+              {Array.isArray(c.cultivationTips) && c.cultivationTips.length > 0 && (
+                <ul className="text-sm text-gray-700 mt-3 list-disc pl-5 space-y-1">
+                  {c.cultivationTips.slice(0, 4).map((t, i) => (
+                    <li key={i}>{t}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 };

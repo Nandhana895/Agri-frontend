@@ -12,6 +12,9 @@ import CropProfiles from './Pages/UserDashboard/CropProfiles';
 import Chatbox from './Pages/UserDashboard/Chatbox';
 import Reports from './Pages/UserDashboard/Reports';
 import AdminDashboard from './Pages/AdminDashboard';
+import ExpertDashboard from './Pages/ExpertDashboard';
+import ForgotPassword from './Pages/ForgotPassword';
+import ResetPassword from './Pages/ResetPassword';
 import ProtectedRoute from './Components/ProtectedRoute';
 import authService from './services/authService';
 
@@ -79,6 +82,8 @@ function App() {
       const user = authService.getCurrentUser();
       if (user?.role === 'admin') {
         window.location.href = '/admin';
+      } else if (user?.role === 'expert') {
+        window.location.href = '/expert';
       } else {
         window.location.href = '/dashboard';
       }
@@ -113,7 +118,7 @@ function App() {
               isAuthenticated ? (
                 (() => {
                   const user = authService.getCurrentUser();
-                  return <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+                  return <Navigate to={user?.role === 'admin' ? '/admin' : user?.role === 'expert' ? '/expert' : '/dashboard'} replace />;
                 })()
               ) : (
                 <Login 
@@ -133,7 +138,7 @@ function App() {
               isAuthenticated ? (
                 (() => {
                   const user = authService.getCurrentUser();
-                  return <Navigate to={user?.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+                  return <Navigate to={user?.role === 'admin' ? '/admin' : user?.role === 'expert' ? '/expert' : '/dashboard'} replace />;
                 })()
               ) : (
                 <Signup 
@@ -146,6 +151,10 @@ function App() {
             } 
           />
           
+          {/* Forgot / Reset */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           {/* Protected farmer dashboard with nested routes */}
           <Route 
             path="/dashboard/*" 
@@ -170,6 +179,16 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Expert dashboard route */}
+          <Route 
+            path="/expert" 
+            element={
+              <ProtectedRoute requireExpert>
+                <ExpertDashboard />
               </ProtectedRoute>
             } 
           />

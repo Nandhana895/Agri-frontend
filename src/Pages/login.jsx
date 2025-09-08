@@ -128,7 +128,7 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
       else if (onClose) onClose();
 
       // Navigate based on role
-      const target = response?.user?.role === 'admin' ? '/admin' : '/dashboard';
+      const target = response?.user?.role === 'admin' ? '/admin' : (response?.user?.role === 'expert' ? '/expert' : '/dashboard');
       navigate(target, { replace: true });
     } catch (error) {
       // Prefer server-provided message exactly as sent
@@ -291,7 +291,7 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
           </div>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-y-2">
           <p className="text-gray-600">
             Don't have an account?{' '}
             <button 
@@ -301,6 +301,9 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
             >
               Sign up
             </button>
+          </p>
+          <p>
+            <a href="/forgot-password" className="text-sm text-[var(--ag-primary-600)] hover:opacity-80">Forgot your password?</a>
           </p>
         </div>
       </div>

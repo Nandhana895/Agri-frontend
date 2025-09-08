@@ -44,6 +44,26 @@ class AuthService {
     }
   }
 
+  // Request password reset
+  async forgotPassword(email) {
+    try {
+      const response = await api.post('/auth/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Request failed' };
+    }
+  }
+
+  // Perform password reset
+  async resetPassword({ email, token, newPassword, confirmPassword }) {
+    try {
+      const response = await api.post('/auth/reset-password', { email, token, newPassword, confirmPassword });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Reset failed' };
+    }
+  }
+
   // Logout user
   logout() {
     localStorage.removeItem(config.TOKEN_KEY);

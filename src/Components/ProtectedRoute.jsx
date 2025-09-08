@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import authService from '../services/authService';
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({ children, requireAdmin = false, requireExpert = false }) => {
   const isAuthenticated = authService.isAuthenticated();
 
   if (!isAuthenticated) {
@@ -18,6 +18,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   if (requireAdmin && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireExpert && user.role !== 'expert') {
     return <Navigate to="/" replace />;
   }
 

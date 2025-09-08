@@ -106,9 +106,14 @@ const CropManagement = () => {
           <div className="p-4">Loading...</div>
         ) : (
           <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
-            {crops.map(c => (
+            {crops.map(c => {
+              const base = (api.defaults.baseURL || '').replace(/\/?api\/?$/, '');
+              const imageSrc = c.imageUrl && !c.imageUrl.startsWith('http')
+                ? `${base}${c.imageUrl}`
+                : (c.imageUrl || '');
+              return (
               <div key={c._id} className="border border-[var(--ag-border)] rounded-lg overflow-hidden">
-                {c.imageUrl ? <img src={c.imageUrl} alt={c.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 bg-gray-100" />}
+                {imageSrc ? <img src={imageSrc} alt={c.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 bg-gray-100" />}
                 <div className="p-4 space-y-2">
                   <div className="font-semibold text-gray-900">{c.name}</div>
                   <div className="text-sm text-gray-700 line-clamp-3">{c.description}</div>
@@ -122,7 +127,8 @@ const CropManagement = () => {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

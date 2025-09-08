@@ -62,14 +62,15 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
         if (!emailRegex.test(value)) return 'Please enter a valid email';
         return '';
       case 'password':
-        if (mode === 'create' && !value) return 'Password is required';
+        // For expert creation, password is optional (will be generated and emailed)
+        if (mode === 'create' && formData.role !== 'expert' && !value) return 'Password is required';
         if (value && value.length < 8) return 'Password must be at least 8 characters';
         if (value && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(value)) {
           return 'Password must contain uppercase, lowercase, number, and special character';
         }
         return '';
       case 'confirmPassword':
-        if (mode === 'create' && !value) return 'Please confirm password';
+        if (mode === 'create' && formData.role !== 'expert' && !value) return 'Please confirm password';
         if (value !== formData.password) return 'Passwords do not match';
         return '';
       default:
@@ -132,7 +133,10 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
       };
 
       if (mode === 'create') {
-        payload.password = formData.password;
+        // Only include password for non-expert or when admin explicitly provided one
+        if (formData.role !== 'expert' || (formData.password && formData.confirmPassword)) {
+          payload.password = formData.password;
+        }
         response = await api.post('/admin/users', payload);
       } else {
         // For edit mode, only include password if it's provided
@@ -244,7 +248,7 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password {isCreateMode ? '*' : '(leave blank to keep current)'}
+                Password {isCreateMode ? (formData.role === 'expert' ? '(optional for Experts)' : '*') : '(leave blank to keep current)'}
               </label>
               <input
                 type="password"
@@ -257,8 +261,8 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
                     ? 'border-red-400 focus:ring-red-500'
                     : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'
                 } ${isViewMode ? 'bg-gray-100' : ''}`}
-                placeholder={isCreateMode ? 'Enter password' : 'Enter new password (optional)'}
-                required={isCreateMode}
+                placeholder={isCreateMode ? (formData.role === 'expert' ? 'Optional for Experts; will be emailed if left blank' : 'Enter password') : 'Enter new password (optional)'}
+                required={isCreateMode && formData.role !== 'expert'}
               />
               {fieldErrors.password && (
                 <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
@@ -266,7 +270,7 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
             </div>
 
             {/* Confirm Password (only for create mode) */}
-            {isCreateMode && (
+            {isCreateMode && formData.role !== 'expert' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm Password *
@@ -306,7 +310,11 @@ const UserModal = ({ isOpen, onClose, onSuccess, user, mode }) => {
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
+                <option value="expert">Expert</option>
               </select>
+              {isCreateMode && formData.role === 'expert' && (
+                <p className="mt-1 text-xs text-gray-500">If left blank, a temporary password will be generated and emailed to the expert.</p>
+              )}
             </div>
 
             {/* Status */}
