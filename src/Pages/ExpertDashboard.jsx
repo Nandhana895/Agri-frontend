@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getSocket } from '../services/socket';
+import { chatApi } from '../services/api';
 import authService from '../services/authService';
+import { useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value }) => (
   <div className="ag-card p-4">
@@ -12,8 +14,10 @@ const StatCard = ({ title, value }) => (
 
 const ExpertDashboard = () => {
   const user = authService.getCurrentUser();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview'); // overview | chat
   const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [text, setText] = useState('');
   const [composeTo, setComposeTo] = useState('');
   const [selectedEmail, setSelectedEmail] = useState('');
@@ -31,12 +35,36 @@ const ExpertDashboard = () => {
       // Ignore echo from self
       if (msg.fromEmail === user?.email) return;
       setMessages((m) => [...m, { ...msg, inbound: true }]);
+      setConversations((prev) => {
+        const idx = prev.findIndex(c => c._id === msg.conversationId);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...next[idx], lastMessageAt: new Date(msg.ts).toISOString(), lastMessageText: msg.text };
+          return next.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+        }
+        return prev;
+      });
     };
     socket.on('receive_message', onReceive);
     return () => {
       socket.off('receive_message', onReceive);
     };
   }, []);
+
+  // Initial load conversations
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await chatApi.listConversations();
+        if (data?.success) setConversations(data.conversations || []);
+      } catch (_) {}
+    })();
+  }, []);
+
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/', { replace: true });
+  };
 
   const send = (e) => {
     e.preventDefault();
@@ -55,19 +83,22 @@ const ExpertDashboard = () => {
     });
   };
 
-  // Build conversation list (unique farmer emails) and messages per selected
-  const conversations = useMemo(() => {
-    const convoMap = new Map();
-    for (const m of messages) {
-      const other = m.inbound ? (m.fromEmail) : (m.toEmail || '');
-      if (!other) continue;
-      const entry = convoMap.get(other) || { email: other, name: m.inbound ? (m.fromName || other) : other, lastTs: 0, lastText: '' };
-      entry.lastTs = Math.max(entry.lastTs, m.ts || Date.now());
-      entry.lastText = m.text || '';
-      convoMap.set(other, entry);
-    }
-    return Array.from(convoMap.values()).sort((a, b) => b.lastTs - a.lastTs);
-  }, [messages]);
+  // Select conversation by email helper
+  const openByEmail = async (email) => {
+    try {
+      const res = await chatApi.getOrCreateConversationByEmail(email);
+      if (res?.success) {
+        setSelectedEmail(email);
+        // Load messages
+        const msgs = await chatApi.listMessages(res.conversation._id);
+        if (msgs?.success) setMessages(msgs.messages || []);
+        setConversations((prev) => {
+          const exists = prev.find(c => c._id === res.conversation._id);
+          return exists ? prev : [res.conversation, ...prev].sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+        });
+      }
+    } catch (_) {}
+  };
 
   const visibleMessages = useMemo(() => {
     if (!selectedEmail) return messages;
@@ -91,6 +122,9 @@ const ExpertDashboard = () => {
               <span className={`h-3 w-3 rounded-full bg-white shadow transform transition ${availability ? 'translate-x-5' : ''}`} />
             </span>
           </label>
+          <button onClick={handleLogout} className="ml-3 px-3 py-2 text-sm rounded-lg border border-[var(--ag-border)] hover:bg-gray-50">
+            Logout
+          </button>
         </div>
       </div>
 
@@ -153,17 +187,21 @@ const ExpertDashboard = () => {
                 onChange={(e) => setComposeTo(e.target.value)}
                 className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
               />
-              <button onClick={(e) => { setSelectedEmail(composeTo.trim()); }} className="px-3 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg">Open</button>
+              <button onClick={(e) => { openByEmail(composeTo.trim()); }} className="px-3 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg">Open</button>
             </div>
             <div className="max-h-96 overflow-y-auto divide-y divide-[var(--ag-border)]">
               {conversations.map((c) => (
-                <button key={c.email} onClick={() => setSelectedEmail(c.email)} className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${selectedEmail === c.email ? 'bg-gray-50' : ''}`}>
+                <button key={c._id} onClick={async () => {
+                  setSelectedEmail((c.participantEmails || []).find(e => e !== (user?.email || '').toLowerCase()) || '');
+                  const msgs = await chatApi.listMessages(c._id);
+                  if (msgs?.success) setMessages(msgs.messages || []);
+                }} className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${selectedEmail && (c.participantEmails||[]).includes(selectedEmail) ? 'bg-gray-50' : ''}`}>
                   <div className="flex items-center justify-between">
-                    <div className="font-medium">{c.name}</div>
-                    <div className="text-xs text-gray-500">{new Date(c.lastTs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div className="font-medium">{((c.participantEmails||[]).find(e => e !== (user?.email || '').toLowerCase())) || 'Conversation'}</div>
+                    <div className="text-xs text-gray-500">{new Date(c.lastMessageAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
-                  <div className="text-xs text-gray-600 truncate">{c.lastText}</div>
-                  <div className="text-xs text-gray-500">{c.email}</div>
+                  <div className="text-xs text-gray-600 truncate">{c.lastMessageText}</div>
+                  <div className="text-xs text-gray-500">{(c.participantEmails||[]).join(', ')}</div>
                 </button>
               ))}
               {conversations.length === 0 && (

@@ -44,3 +44,21 @@ api.interceptors.response.use(
 );
 
 export default api; 
+export const chatApi = {
+  async listConversations() {
+    const res = await api.get('/chat/conversations');
+    return res.data;
+  },
+  async getOrCreateConversationByEmail(email) {
+    const res = await api.post('/chat/conversations/by-email', { email });
+    return res.data;
+    },
+  async listMessages(conversationId) {
+    const res = await api.get(`/chat/conversations/${conversationId}/messages`);
+    return res.data;
+  },
+  async markRead(conversationId) {
+    const res = await api.post(`/chat/conversations/${conversationId}/read`);
+    return res.data;
+  }
+};
