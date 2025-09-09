@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getSocket } from '../services/socket';
 import { chatApi } from '../services/api';
@@ -22,6 +22,9 @@ const ExpertDashboard = () => {
   const [composeTo, setComposeTo] = useState('');
   const [selectedEmail, setSelectedEmail] = useState('');
   const [availability, setAvailability] = useState(true);
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
@@ -32,9 +35,14 @@ const ExpertDashboard = () => {
   useEffect(() => {
     const socket = getSocket();
     const onReceive = (msg) => {
-      // Ignore echo from self
-      if (msg.fromEmail === user?.email) return;
-      setMessages((m) => [...m, { ...msg, inbound: true }]);
+      const peerEmail = String(selectedEmail || composeTo || '').toLowerCase();
+      const fromEmail = String(msg.fromEmail || '').toLowerCase();
+      const toEmail = String(msg.toEmail || '').toLowerCase();
+      const myEmail = String(user?.email || '').toLowerCase();
+      const isForThisChat = peerEmail && (fromEmail === peerEmail || (fromEmail === myEmail && toEmail === peerEmail));
+      if (!isForThisChat) return;
+      const inbound = fromEmail !== myEmail;
+      setMessages((m) => [...m, { ...msg, inbound }]);
       setConversations((prev) => {
         const idx = prev.findIndex(c => c._id === msg.conversationId);
         if (idx >= 0) {
@@ -45,11 +53,22 @@ const ExpertDashboard = () => {
         return prev;
       });
     };
+    const onTyping = (payload = {}) => {
+      const fromEmail = String(payload.fromEmail || '').toLowerCase();
+      const peerEmail = String(selectedEmail || composeTo || '').toLowerCase();
+      if (fromEmail && peerEmail && fromEmail === peerEmail) {
+        setIsOtherTyping(true);
+        window.clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = window.setTimeout(() => setIsOtherTyping(false), 1500);
+      }
+    };
     socket.on('receive_message', onReceive);
+    socket.on('typing', onTyping);
     return () => {
       socket.off('receive_message', onReceive);
+      socket.off('typing', onTyping);
     };
-  }, []);
+  }, [selectedEmail, composeTo]);
 
   // Initial load conversations
   useEffect(() => {
@@ -60,6 +79,13 @@ const ExpertDashboard = () => {
       } catch (_) {}
     })();
   }, []);
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
 
   const handleLogout = () => {
     authService.logout();
@@ -83,6 +109,18 @@ const ExpertDashboard = () => {
     });
   };
 
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      send(e);
+    } else {
+      const target = (selectedEmail || composeTo || '').trim();
+      if (target) {
+        const socket = getSocket();
+        socket.emit('typing', { toEmail: target });
+      }
+    }
+  };
+
   // Select conversation by email helper
   const openByEmail = async (email) => {
     try {
@@ -91,7 +129,16 @@ const ExpertDashboard = () => {
         setSelectedEmail(email);
         // Load messages
         const msgs = await chatApi.listMessages(res.conversation._id);
-        if (msgs?.success) setMessages(msgs.messages || []);
+        if (msgs?.success) {
+          const myEmail = String(user?.email || '').toLowerCase();
+          const hydrated = (msgs.messages || []).map((m) => ({
+            ...m,
+            inbound: String(m.fromEmail || '').toLowerCase() !== myEmail,
+            ts: new Date(m.createdAt).getTime()
+          }));
+          setMessages(hydrated);
+          await chatApi.markRead(res.conversation._id).catch(() => {});
+        }
         setConversations((prev) => {
           const exists = prev.find(c => c._id === res.conversation._id);
           return exists ? prev : [res.conversation, ...prev].sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
@@ -101,9 +148,25 @@ const ExpertDashboard = () => {
   };
 
   const visibleMessages = useMemo(() => {
-    if (!selectedEmail) return messages;
-    return messages.filter((m) => (m.inbound ? m.fromEmail === selectedEmail : m.toEmail === selectedEmail));
-  }, [messages, selectedEmail]);
+    const peer = (selectedEmail || composeTo || '').toLowerCase();
+    if (!peer) return messages;
+    return messages.filter((m) => {
+      const fromEmail = String(m.fromEmail || '').toLowerCase();
+      const toEmail = String(m.toEmail || '').toLowerCase();
+      return fromEmail === peer || toEmail === peer;
+    });
+  }, [messages, selectedEmail, composeTo]);
+
+  const formatTime = (ts) => {
+    try {
+      const d = new Date(ts);
+      const hh = d.getHours().toString().padStart(2, '0');
+      const mm = d.getMinutes().toString().padStart(2, '0');
+      return `${hh}:${mm}`;
+    } catch (_) {
+      return '';
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -214,18 +277,34 @@ const ExpertDashboard = () => {
           <div className="ag-card p-0 overflow-hidden lg:col-span-2">
             <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
               <div className="text-sm text-gray-600">Chatting with: <span className="font-medium">{selectedEmail || (composeTo ? composeTo : '—')}</span></div>
+              {isOtherTyping && (selectedEmail || composeTo) && (
+                <div className="text-xs text-[var(--ag-primary-600)] mt-1">typing…</div>
+              )}
             </div>
-            <div className="h-96 overflow-y-auto p-4 space-y-3 bg-[var(--ag-muted)]">
+            <div ref={scrollContainerRef} className="h-96 overflow-y-auto p-4 space-y-3 bg-[var(--ag-muted)]">
               {visibleMessages.map((m, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={`max-w-md px-4 py-2 rounded-lg ${m.inbound ? 'bg-white border border-[var(--ag-border)]' : 'bg-[var(--ag-primary-500)] text-white ml-auto'}`}>
-                  <div className="text-xs opacity-80 mb-1">{m.inbound ? `${m.fromName || m.fromEmail}` : 'You'}</div>
-                  {m.text}
+                <motion.div
+                  key={`${m._id || ''}-${i}`}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`max-w-md px-3 py-2 rounded-2xl shadow-sm ${m.inbound ? 'bg-white border border-[var(--ag-border)]' : 'bg-[var(--ag-primary-500)] text-white ml-auto'}`}
+                >
+                  <div className="text-xs opacity-70 mb-0.5">{m.inbound ? `${m.fromName || m.fromEmail}` : 'You'}</div>
+                  <div className="whitespace-pre-wrap break-words">{m.text}</div>
+                  <div className={`text-[10px] mt-1 ${m.inbound ? 'text-gray-500' : 'text-white/80'} text-right`}>{formatTime(m.ts || m.createdAt)}</div>
                 </motion.div>
               ))}
               {visibleMessages.length === 0 && <div className="text-sm text-gray-500">No messages in this conversation.</div>}
             </div>
             <form onSubmit={send} className="p-3 border-t border-[var(--ag-border)] flex gap-2">
-              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message..." className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" />
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder="Type a message"
+                rows={1}
+                className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] resize-none"
+              />
               <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]">Send</button>
             </form>
           </div>
