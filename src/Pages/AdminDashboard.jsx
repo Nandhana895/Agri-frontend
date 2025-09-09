@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 import api from '../services/api';
@@ -28,39 +28,6 @@ const StatCard = ({ label, value, icon }) => (
   </div>
 );
 
-const MiniLineChart = ({ points }) => {
-  const width = 280;
-  const height = 90;
-  const maxVal = Math.max(...points, 1);
-  const coords = points.map((v, i) => {
-    const x = (i / (points.length - 1)) * width;
-    const y = height - (v / maxVal) * height;
-    return `${x},${y}`;
-  }).join(' ');
-  return (
-    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="text-[var(--ag-primary-500)]">
-      <polyline fill="none" stroke="currentColor" strokeWidth="2" points={coords} />
-    </svg>
-  );
-};
-
-const MiniBarChart = ({ values }) => {
-  const height = 90;
-  const maxVal = Math.max(...values, 1);
-  const barWidth = 20;
-  const gap = 12;
-  const width = values.length * (barWidth + gap);
-  return (
-    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="text-[var(--ag-primary-500)]">
-      {values.map((v, i) => {
-        const h = (v / maxVal) * (height - 8);
-        const x = i * (barWidth + gap);
-        const y = height - h;
-        return <rect key={i} x={x} y={y} width={barWidth} height={h} rx="3" className="fill-[var(--ag-primary-400)]" />;
-      })}
-    </svg>
-  );
-};
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -110,8 +77,6 @@ const AdminDashboard = () => {
 
   const user = authService.getCurrentUser();
 
-  const trendData = useMemo(() => [12, 18, 10, 22, 28, 24, 32, 29, 35, 31, 38, 42], []);
-  const irrigationUsage = useMemo(() => [30, 42, 25, 48, 36, 52, 45], []);
 
   if (loading) return <div className="p-8">Loading...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
@@ -131,9 +96,6 @@ const AdminDashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <input placeholder="Search..." className="hidden md:block px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none" />
-              <button className="p-2 rounded-lg border border-[var(--ag-border)]">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-              </button>
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen((v) => !v)}
@@ -182,20 +144,6 @@ const AdminDashboard = () => {
             <StatCard label="Inactive Users" value={stats.inactiveUsers} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>} />
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
-            <div className="ag-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Crop Trends</h2>
-              </div>
-              <MiniLineChart points={trendData} />
-            </div>
-            <div className="ag-card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Irrigation Usage</h2>
-              </div>
-              <MiniBarChart values={irrigationUsage} />
-            </div>
-          </div>
 
           <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
             <div className="ag-card p-6">
