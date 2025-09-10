@@ -72,7 +72,9 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
               }
             },
             ux_mode: 'popup',
-            use_fedcm_for_prompt: false
+            use_fedcm_for_prompt: false,
+            auto_select: false,
+            cancel_on_tap_outside: true
           });
           const container = document.getElementById('googleLoginBtn');
           if (container) {
