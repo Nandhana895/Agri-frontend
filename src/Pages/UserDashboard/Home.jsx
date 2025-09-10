@@ -1,4 +1,5 @@
 import React from 'react';
+import MapWithWeather from '../../Components/MapWithWeather';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import authService from '../../services/authService';
@@ -205,17 +206,9 @@ const Home = () => {
           </ul>
         </Card>
 
-        {/* Weather + tasks */}
-        <Card title="Today’s Weather">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full ag-cta-gradient text-white flex items-center justify-center">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M7.05 7.05L5.636 5.636m12.728 0l-1.414 1.414M7.05 16.95l-1.414 1.414"/></svg>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-gray-900">28°C</p>
-              <p className="text-sm text-gray-600">Partly cloudy • Light breeze</p>
-            </div>
-          </div>
+        {/* Interactive Map + Weather */}
+        <Card title="Map & Climate">
+          <MapWithWeather />
         </Card>
         <Card title="Upcoming Tasks">
           <ul className="space-y-2">

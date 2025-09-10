@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User } from 'lucide-react';
+import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud } from 'lucide-react';
 import authService from '../services/authService';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/dashboard/soil-health', label: 'Soil Health Analyzer', icon: Sprout },
   { to: '/dashboard/fertilizer', label: 'Fertilizer Calculator', icon: Calculator },
   { to: '/dashboard/crop-profiles', label: 'Crop Profiles', icon: BarChart3 },
+  { to: '/dashboard/weather-forecast', label: 'Weather Forecast', icon: Cloud },
   { to: '/dashboard/chat', label: 'Chatbox', icon: MessageSquare },
   { to: '/dashboard/reports', label: 'Reports', icon: FileText },
 ];

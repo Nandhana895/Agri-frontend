@@ -221,6 +221,20 @@ npm run build
 npm run preview
 ```
 
+## Weather Map Feature
+
+The dashboard Home includes an interactive map. Click any location to see current climate data.
+
+### Setup
+
+1. Create `frontend/.env` with your OpenWeather key:
+```env
+VITE_OPENWEATHER_API_KEY=YOUR_OPENWEATHER_KEY
+```
+2. Restart the dev server after adding `.env`.
+
+This feature uses OpenStreetMap tiles (via Leaflet) and OpenWeather.
+
 ## Project Structure
 
 ```

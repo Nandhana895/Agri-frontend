@@ -208,31 +208,20 @@ const ExpertDashboard = () => {
             <StatCard title="Avg. response time" value="< 2m" />
           </div>
 
-          {/* Quick actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="ag-card p-4 space-y-3">
-              <div className="font-semibold">Quick Actions</div>
-              <div className="grid grid-cols-2 gap-2">
-                <a href="/dashboard/crop-profiles" className="px-3 py-2 bg-[var(--ag-muted)] rounded-lg text-sm">View Crop Profiles</a>
-                <a href="/dashboard/reports" className="px-3 py-2 bg-[var(--ag-muted)] rounded-lg text-sm">View Reports</a>
-                <a href="/dashboard/soil-health" className="px-3 py-2 bg-[var(--ag-muted)] rounded-lg text-sm">Soil Health</a>
-                <a href="/dashboard/fertilizer" className="px-3 py-2 bg-[var(--ag-muted)] rounded-lg text-sm">Fertilizer Calc</a>
-              </div>
-            </div>
-            <div className="ag-card p-4 space-y-3 lg:col-span-2">
-              <div className="font-semibold">Recent Messages</div>
-              <div className="max-h-56 overflow-y-auto space-y-2">
-                {messages.slice(-8).reverse().map((m, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className={`h-2 w-2 rounded-full mt-2 ${m.inbound ? 'bg-blue-500' : 'bg-green-500'}`} />
-                    <div className="text-sm">
-                      <div className="text-gray-600">{m.inbound ? (m.fromName || m.fromEmail) : 'You'}</div>
-                      <div>{m.text}</div>
-                    </div>
+          {/* Recent messages */}
+          <div className="ag-card p-4 space-y-3">
+            <div className="font-semibold">Recent Messages</div>
+            <div className="max-h-56 overflow-y-auto space-y-2">
+              {messages.slice(-8).reverse().map((m, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`h-2 w-2 rounded-full mt-2 ${m.inbound ? 'bg-blue-500' : 'bg-green-500'}`} />
+                  <div className="text-sm">
+                    <div className="text-gray-600">{m.inbound ? (m.fromName || m.fromEmail) : 'You'}</div>
+                    <div>{m.text}</div>
                   </div>
-                ))}
-                {messages.length === 0 && <div className="text-sm text-gray-500">No messages yet.</div>}
-              </div>
+                </div>
+              ))}
+              {messages.length === 0 && <div className="text-sm text-gray-500">No messages yet.</div>}
             </div>
           </div>
         </div>

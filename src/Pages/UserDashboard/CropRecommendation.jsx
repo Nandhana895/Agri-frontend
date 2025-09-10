@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
 
 const Progress = ({ value }) => (
   <div className="w-full h-2 bg-[var(--ag-muted)] rounded-full overflow-hidden">
@@ -36,6 +37,7 @@ const CropRecommendation = () => {
   const [form, setForm] = useState({ nitrogen: '', phosphorus: '', potassium: '', ph: '', rainfall: '' });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -49,28 +51,37 @@ const CropRecommendation = () => {
     return Math.round(Math.max(35, Math.min(95, balance)));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Mock logic with slight delay to feel responsive
-    setTimeout(() => {
-      const crops = ['Wheat', 'Rice', 'Maize', 'Soybean', 'Tomato', 'Cotton', 'Barley'];
-      const baseScore = computeMockScore();
-      const suggested = crops
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 4)
-        .map((name, idx) => ({
-          name,
-          score: Math.max(40, Math.min(98, baseScore - idx * 7 + Math.floor(Math.random() * 8 - 4))),
-          notes: [
-            'Performs well in loamy soil with good drainage.',
-            'Moderate irrigation and balanced NPK recommended.',
-          ],
-        }))
-        .sort((a, b) => b.score - a.score);
-      setResults(suggested);
+    setErrorMsg('');
+    try {
+      const payload = {
+        nitrogen: Number(form.nitrogen),
+        phosphorus: Number(form.phosphorus),
+        potassium: Number(form.potassium),
+        ph: Number(form.ph),
+        rainfall: Number(form.rainfall)
+      };
+      const res = await api.post('/farmer/ai/crop-recommendation', payload);
+      if (res?.data?.success) {
+        const suggested = (res.data.data || []).map((c) => ({
+          name: c.name,
+          score: c.score,
+          notes: c.notes && c.notes.length ? c.notes : ['AI suggested based on your inputs.']
+        }));
+        setResults(suggested);
+      } else {
+        setResults([]);
+        setErrorMsg(res?.data?.message || 'Failed to fetch AI recommendations');
+      }
+    } catch (err) {
+      setResults([]);
+      const msg = err?.response?.data?.message || err?.message || 'Request failed';
+      setErrorMsg(msg);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -118,6 +129,11 @@ const CropRecommendation = () => {
 
         {/* Results */}
         <div className="lg:col-span-2 grid gap-4 md:grid-cols-2">
+          {errorMsg && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="ag-card p-4 text-red-600 md:col-span-2">
+              {errorMsg}
+            </motion.div>
+          )}
           {results.map((r, i) => (
             <ResultCard key={i} name={r.name} score={r.score} notes={r.notes} />
           ))}

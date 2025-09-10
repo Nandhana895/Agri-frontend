@@ -9,6 +9,7 @@ import CropRecommendation from './Pages/UserDashboard/CropRecommendation';
 import SoilAnalyzer from './Pages/UserDashboard/SoilAnalyzer';
 import FertilizerCalculator from './Pages/UserDashboard/FertilizerCalculator';
 import CropProfiles from './Pages/UserDashboard/CropProfiles';
+import WeatherForecast from './Pages/UserDashboard/WeatherForecast';
 import Chatbox from './Pages/UserDashboard/Chatbox';
 import Reports from './Pages/UserDashboard/Reports';
 import AdminDashboard from './Pages/AdminDashboard';
@@ -169,6 +170,7 @@ function App() {
             <Route path="soil-health" element={<SoilAnalyzer />} />
             <Route path="fertilizer" element={<FertilizerCalculator />} />
             <Route path="crop-profiles" element={<CropProfiles />} />
+            <Route path="weather-forecast" element={<WeatherForecast />} />
             <Route path="chat" element={<Chatbox />} />
             <Route path="reports" element={<Reports />} />
           </Route>
