@@ -145,9 +145,49 @@ const AdminDashboard = () => {
           </div>
 
 
-          
+          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">System Activity</h2>
+                <span className="text-sm text-gray-500">updates every 10s</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="ag-stat-tile"><div className="text-sm text-gray-600">Active Queries</div><div className="text-2xl font-semibold">{liveStats.activeQueries}</div></div>
+                <div className="ag-stat-tile"><div className="text-sm text-gray-600">Pending Recs</div><div className="text-2xl font-semibold">{liveStats.pendingRecommendations}</div></div>
+              </div>
+            </div>
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Data Health</h2>
+              </div>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div>Users with issues: <span className="font-semibold">{dataHealth.usersWithIssues}</span></div>
+                <div>Missing soil profiles: <span className="font-semibold">{dataHealth.usersMissingSoilProfile}</span></div>
+                <div className="text-gray-500">{dataHealth.notes}</div>
+              </div>
+            </div>
+          </div>
 
-          <div className="px-4 sm:px-0">
+          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
+            <div className="ag-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Admin Controls</h2>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={async () => { try { await api.post('/admin/ml/retrain'); alert('Retrain triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
+                  className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]"
+                >Trigger Model Retrain</button>
+                <button
+                  onClick={async () => { try { await api.post('/admin/ml/refresh-recommendations'); alert('Refresh triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
+                >Refresh Recommendations</button>
+                <button
+                  onClick={() => { window.open(`${api.defaults.baseURL}/admin/reports/analytics.csv`, '_blank'); }}
+                  className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900"
+                >Download Analytics (CSV)</button>
+              </div>
+            </div>
             <div className="ag-card overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
                 <h2 className="font-semibold text-gray-900">Recent Admin Logs</h2>

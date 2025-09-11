@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import MapWithWeather from '../../Components/MapWithWeather';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import authService from '../../services/authService';
+import api from '../../services/api';
 
 const Card = ({ title, children }) => (
   <motion.div
@@ -48,18 +49,74 @@ const QuickAction = ({ to, icon, label }) => (
 const Home = () => {
   const user = authService.getCurrentUser();
   const firstName = (user?.name || 'Farmer').split(' ')[0];
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      activeFields: 0,
+      soilTests: 0,
+      recommendations: 0,
+      irrigationEvents: 0
+    },
+    recentRecommendations: [],
+    recentActivities: [],
+    upcomingTasks: [],
+    soilHealth: {
+      ph: null,
+      nitrogen: null,
+      phosphorus: null,
+      potassium: null
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const recommendations = [
-    'Irrigate early morning to reduce evaporation.',
-    'Rotate crops to improve soil health and reduce pests.',
-    'Mulch to conserve moisture and suppress weeds.'
-  ];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/farmer/dashboard');
+        if (response.data?.success) {
+          setDashboardData(response.data.data || dashboardData);
+        }
+      } catch (err) {
+        setError(err?.response?.data?.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const activities = [
-    { title: 'Soil test uploaded', time: '2h ago' },
-    { title: 'New crop recommendation generated', time: 'Yesterday' },
-    { title: 'Fertilizer plan updated', time: '3 days ago' }
-  ];
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--ag-primary-500)] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ag-card p-6 text-center">
+        <div className="text-red-600 mb-4">
+          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p className="text-lg font-medium">Unable to load dashboard</p>
+          <p className="text-sm text-gray-600">{error}</p>
+        </div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -75,12 +132,12 @@ const Home = () => {
         <div className="ag-hero-gradient p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Good day, {firstName} 🌿</h2>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">Here’s a quick glance at your farm’s health and priorities today.</p>
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Welcome back, {firstName} 🌿</h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">Monitor your farm's performance and get intelligent insights to optimize your agricultural practices.</p>
             </div>
             <div className="flex items-center gap-2">
               <Link to="/dashboard/reports" className="ag-cta-gradient text-white px-4 py-2 rounded-lg text-sm shadow hover:opacity-95 self-start md:self-auto">View Reports</Link>
-              <Link to="/dashboard/chat" className="text-[var(--ag-primary-600)] px-4 py-2 rounded-lg text-sm border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] bg-white/60 backdrop-blur">Ask Assistant</Link>
+              <Link to="/dashboard/chat" className="text-[var(--ag-primary-600)] px-4 py-2 rounded-lg text-sm border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] bg-white/60 backdrop-blur">Ask Expert</Link>
             </div>
           </div>
         </div>
@@ -94,34 +151,30 @@ const Home = () => {
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--ag-field-200)] text-[var(--ag-primary-600)]">Live</span>
           </div>
           <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">6</p>
-            <span className="text-green-600 text-xs font-medium">+1 this week</span>
+            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.activeFields}</p>
+            <span className="text-gray-500 text-xs font-medium">Total</span>
           </div>
-          <div className="mt-2"><svg viewBox="0 0 100 28" className="w-full h-8"><path d="M0 20 L10 22 L20 18 L30 16 L40 12 L50 14 L60 10 L70 12 L80 8 L90 10 L100 6" fill="none" stroke="url(#g1)" strokeWidth="2"/><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#34a853"/><stop offset="100%" stopColor="#5ac178"/></linearGradient></defs></svg></div>
         </div>
         <div className="ag-card p-5">
           <p className="text-xs tracking-wide text-gray-500">Soil Tests</p>
           <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">12</p>
-            <span className="text-green-600 text-xs font-medium">+2 this month</span>
+            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.soilTests}</p>
+            <span className="text-gray-500 text-xs font-medium">Completed</span>
           </div>
-          <div className="mt-2"><svg viewBox="0 0 100 28" className="w-full h-8"><path d="M0 24 L10 20 L20 22 L30 18 L40 16 L50 12 L60 14 L70 12 L80 10 L90 8 L100 6" fill="none" stroke="#60a5fa" strokeWidth="2"/></svg></div>
         </div>
         <div className="ag-card p-5">
           <p className="text-xs tracking-wide text-gray-500">Recommendations</p>
           <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">8</p>
-            <span className="text-red-600 text-xs font-medium">-1 pending</span>
+            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.recommendations}</p>
+            <span className="text-gray-500 text-xs font-medium">Available</span>
           </div>
-          <div className="mt-2"><svg viewBox="0 0 100 28" className="w-full h-8"><path d="M0 6 L10 10 L20 8 L30 12 L40 10 L50 14 L60 12 L70 16 L80 14 L90 18 L100 16" fill="none" stroke="#8d6e63" strokeWidth="2"/></svg></div>
         </div>
         <div className="ag-card p-5">
           <p className="text-xs tracking-wide text-gray-500">Irrigation Events</p>
           <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">14</p>
-            <span className="text-green-600 text-xs font-medium">+3 this week</span>
+            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.irrigationEvents}</p>
+            <span className="text-gray-500 text-xs font-medium">This Month</span>
           </div>
-          <div className="mt-2"><svg viewBox="0 0 100 28" className="w-full h-8"><path d="M0 18 L10 16 L20 14 L30 12 L40 10 L50 8 L60 10 L70 8 L80 6 L90 8 L100 10" fill="none" stroke="#34a853" strokeWidth="2"/></svg></div>
         </div>
       </div>
 
@@ -129,21 +182,55 @@ const Home = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Recommendations */}
         <Card title="Recent Recommendations">
-          <ul className="list-disc pl-5 space-y-2">
-            {recommendations.map((r, i) => (
-              <li key={i}>{r}</li>
-            ))}
-          </ul>
+          {dashboardData.recentRecommendations.length > 0 ? (
+            <ul className="list-disc pl-5 space-y-2">
+              {dashboardData.recentRecommendations.map((r, i) => (
+                <li key={i} className="text-sm">{r}</li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <p className="text-gray-500 text-sm">No recommendations yet</p>
+              <p className="text-gray-400 text-xs mt-1">Get crop recommendations to see suggestions here</p>
+            </div>
+          )}
         </Card>
 
         {/* Soil status */}
         <Card title="Soil Health Snapshot">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm"><span>Soil pH</span><span className="font-medium text-gray-900">6.5 • Optimal</span></div>
-            <div className="flex items-center justify-between text-sm"><span>Nitrogen</span><span className="font-medium text-gray-900">Medium</span></div>
-            <div className="flex items-center justify-between text-sm"><span>Phosphorus</span><span className="font-medium text-gray-900">Adequate</span></div>
-            <div className="flex items-center justify-between text-sm"><span>Potassium</span><span className="font-medium text-gray-900">Low</span></div>
-          </div>
+          {dashboardData.soilHealth.ph ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Soil pH</span>
+                <span className="font-medium text-gray-900">
+                  {dashboardData.soilHealth.ph} • {dashboardData.soilHealth.ph >= 6 && dashboardData.soilHealth.ph <= 7 ? 'Optimal' : 'Needs Adjustment'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Nitrogen</span>
+                <span className="font-medium text-gray-900">{dashboardData.soilHealth.nitrogen || 'Not tested'}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Phosphorus</span>
+                <span className="font-medium text-gray-900">{dashboardData.soilHealth.phosphorus || 'Not tested'}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Potassium</span>
+                <span className="font-medium text-gray-900">{dashboardData.soilHealth.potassium || 'Not tested'}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              <p className="text-gray-500 text-sm">No soil data available</p>
+              <p className="text-gray-400 text-xs mt-1">Analyze your soil to see health metrics</p>
+            </div>
+          )}
         </Card>
 
         {/* Quick actions */}
@@ -196,26 +283,50 @@ const Home = () => {
 
         {/* Activity */}
         <Card title="Recent Activity">
-          <ul className="divide-y divide-[var(--ag-border)]">
-            {activities.map((a, i) => (
-              <li key={i} className="py-3 flex items-center justify-between">
-                <span className="text-sm text-gray-800">{a.title}</span>
-                <span className="text-xs text-gray-500">{a.time}</span>
-              </li>
-            ))}
-          </ul>
+          {dashboardData.recentActivities.length > 0 ? (
+            <ul className="divide-y divide-[var(--ag-border)]">
+              {dashboardData.recentActivities.map((a, i) => (
+                <li key={i} className="py-3 flex items-center justify-between">
+                  <span className="text-sm text-gray-800">{a.title}</span>
+                  <span className="text-xs text-gray-500">{a.time}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-gray-500 text-sm">No recent activity</p>
+              <p className="text-gray-400 text-xs mt-1">Your farming activities will appear here</p>
+            </div>
+          )}
         </Card>
 
         {/* Interactive Map + Weather */}
         <Card title="Map & Climate">
           <MapWithWeather />
         </Card>
+        
         <Card title="Upcoming Tasks">
-          <ul className="space-y-2">
-            <li className="flex items-center justify-between text-sm"><span>Inspect irrigation pipes</span><span className="text-xs text-gray-500">Today</span></li>
-            <li className="flex items-center justify-between text-sm"><span>Apply potassium to Field 3</span><span className="text-xs text-gray-500">Tomorrow</span></li>
-            <li className="flex items-center justify-between text-sm"><span>Upload soil test results</span><span className="text-xs text-gray-500">In 3 days</span></li>
-          </ul>
+          {dashboardData.upcomingTasks.length > 0 ? (
+            <ul className="space-y-2">
+              {dashboardData.upcomingTasks.map((task, i) => (
+                <li key={i} className="flex items-center justify-between text-sm">
+                  <span>{task.title}</span>
+                  <span className="text-xs text-gray-500">{task.dueDate}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-4">
+              <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <p className="text-gray-500 text-sm">No upcoming tasks</p>
+              <p className="text-gray-400 text-xs mt-1">Tasks and reminders will appear here</p>
+            </div>
+          )}
         </Card>
       </div>
     </div>
