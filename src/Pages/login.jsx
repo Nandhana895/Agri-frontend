@@ -273,7 +273,6 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
               <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
             )}
           </div>
-
           <button
             type="submit"
             className="w-full ag-cta-gradient text-white py-2 rounded-lg hover:opacity-95 transition-opacity font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
@@ -282,7 +281,6 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
         <div className="mt-4">
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-[var(--ag-border)]" />
@@ -293,7 +291,6 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
             <div id="googleLoginBtn" />
           </div>
         </div>
-
         <div className="mt-4 text-center space-y-2">
           <p className="text-gray-600">
             Don't have an account?{' '}

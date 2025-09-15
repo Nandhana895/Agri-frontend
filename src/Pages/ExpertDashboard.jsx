@@ -14,7 +14,7 @@ const StatCard = ({ title, value }) => (
 const ExpertDashboard = () => {
   const user = authService.getCurrentUser();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview'); // overview | chat
+  const [activeTab, setActiveTab] = useState('chat');
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [text, setText] = useState('');
@@ -23,6 +23,13 @@ const ExpertDashboard = () => {
   const [availability, setAvailability] = useState(true);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [requestsTab, setRequestsTab] = useState('pending'); // pending | handled
+  const [displayNameByEmail, setDisplayNameByEmail] = useState({});
+  const [unreadByConvo, setUnreadByConvo] = useState({}); // { [conversationId]: number }
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]); // {type:'request'|'message', text, ts, conversationId?, peerEmail?}
+  const totalUnread = useMemo(() => Object.values(unreadByConvo).reduce((a, b) => a + (b || 0), 0), [unreadByConvo]);
+  const notifCount = (pendingRequests?.length || 0) + notifications.filter((n) => n.type === 'message').length;
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const scrollContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -63,9 +70,31 @@ const ExpertDashboard = () => {
         typingTimeoutRef.current = window.setTimeout(() => setIsOtherTyping(false), 1500);
       }
     };
+    const onReceiveAny = (msg) => {
+      // Maintain name map and unread counts for background conversations
+      const myEmail = String(user?.email || '').toLowerCase();
+      const fromEmail = String(msg.fromEmail || '').toLowerCase();
+      const toEmail = String(msg.toEmail || '').toLowerCase();
+      const peer = fromEmail === myEmail ? toEmail : fromEmail;
+      if (msg.fromName && peer) {
+        setDisplayNameByEmail((m) => ({ ...m, [peer]: msg.fromName }));
+      }
+      const activePeer = String(selectedEmail || composeTo || '').toLowerCase();
+      const inbound = fromEmail !== myEmail;
+      if (inbound && peer && peer !== activePeer && msg.conversationId) {
+        setUnreadByConvo((m) => ({ ...m, [msg.conversationId]: (m[msg.conversationId] || 0) + 1 }));
+        const label = msg.fromName || displayNameByEmail[peer] || peer;
+        setNotifications((list) => [
+          { type: 'message', text: `New message from ${label}`, ts: Date.now(), conversationId: msg.conversationId, peerEmail: peer },
+          ...list
+        ].slice(0, 30));
+      }
+    };
+    socket.on('receive_message', onReceiveAny);
     socket.on('receive_message', onReceive);
     socket.on('typing', onTyping);
     return () => {
+      socket.off('receive_message', onReceiveAny);
       socket.off('receive_message', onReceive);
       socket.off('typing', onTyping);
     };
@@ -87,6 +116,14 @@ const ExpertDashboard = () => {
       try {
         const r = await chatApi.listPendingRequests();
         if (r?.success) setPendingRequests(r.data || []);
+        // Seed display names from pending requests (farmer side)
+        const seed = {};
+        (r?.data || []).forEach((it) => {
+          const email = String(it?.farmer?.email || '').toLowerCase();
+          const name = it?.farmer?.name;
+          if (email && name) seed[email] = name;
+        });
+        if (Object.keys(seed).length) setDisplayNameByEmail((m) => ({ ...seed, ...m }));
       } catch (_) {}
     })();
   }, []);
@@ -187,57 +224,90 @@ const ExpertDashboard = () => {
           <h1 className="text-2xl font-bold">Expert Dashboard</h1>
           <p className="mt-1 text-gray-600">{greeting}, {user?.name || 'Expert'}. Manage consultations and messages.</p>
         </div>
-        <div className="ag-card px-4 py-2 flex items-center gap-3">
-          <span className={`h-2 w-2 rounded-full ${availability ? 'bg-green-500' : 'bg-gray-400'}`} />
-          <span className="text-sm">{availability ? 'Available' : 'Away'}</span>
-          <label className="inline-flex items-center cursor-pointer ml-2">
-            <input type="checkbox" className="sr-only" checked={availability} onChange={(e) => setAvailability(e.target.checked)} />
-            <span className="w-10 h-5 bg-gray-300 rounded-full p-1 flex items-center transition">
-              <span className={`h-3 w-3 rounded-full bg-white shadow transform transition ${availability ? 'translate-x-5' : ''}`} />
-            </span>
-          </label>
-          <button onClick={handleLogout} className="ml-3 px-3 py-2 text-sm rounded-lg border border-[var(--ag-border)] hover:bg-gray-50">
-            Logout
-          </button>
+        <div className="ag-card px-4 py-2 flex items-center gap-3 relative">
+          {/* Notification bell */}
+          <div className="relative">
+            <button onClick={() => setShowNotifMenu((s) => !s)} className="px-2 py-2 rounded-lg border border-[var(--ag-border)] hover:bg-gray-50 relative flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" viewBox="0 0 20 20" fill="currentColor"><path d="M10 2a6 6 0 00-6 6v2.586l-.707.707A1 1 0 004 13h12a1 1 0 00.707-1.707L16 10.586V8a6 6 0 00-6-6zm0 16a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+              {notifCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex items-center justify-center text-[10px] h-4 min-w-4 px-1 rounded-full bg-green-600 text-white">{notifCount}</span>
+              )}
+            </button>
+            {showNotifMenu && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-[var(--ag-border)] rounded-lg shadow z-10 max-h-64 overflow-y-auto">
+                <div className="px-3 py-2 text-sm font-semibold border-b border-[var(--ag-border)]">Notifications</div>
+                {pendingRequests.map((r) => (
+                  <div key={`req-${r._id}`} className="px-3 py-2 text-sm hover:bg-gray-50">
+                    New chat request from <span className="font-medium">{r.farmer?.name || r.farmer?.email || 'Farmer'}</span>
+                  </div>
+                ))}
+                {notifications.map((n, idx) => (
+                  <button key={`n-${idx}`} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50" onClick={async () => {
+                    // Open conversation when clicking a message notif
+                    if (n.conversationId && n.peerEmail) {
+                      setSelectedEmail(n.peerEmail);
+                      const msgs = await chatApi.listMessages(n.conversationId);
+                      if (msgs?.success) {
+                        const myEmail = String(user?.email || '').toLowerCase();
+                        const hydrated = (msgs.messages || []).map((m) => ({
+                          ...m,
+                          inbound: String(m.fromEmail || '').toLowerCase() !== myEmail,
+                          ts: new Date(m.createdAt).getTime()
+                        }));
+                        setMessages(hydrated);
+                      }
+                      try { await chatApi.markRead(n.conversationId); } catch (_) {}
+                      setUnreadByConvo((m) => ({ ...m, [n.conversationId]: 0 }));
+                      // Remove this message notification immediately
+                      setNotifications((list) => list.filter((x, i) => i !== idx));
+                      setShowNotifMenu(false);
+                      setActiveTab('chat');
+                    }
+                  }}>
+                    {n.text}
+                  </button>
+                ))}
+                {pendingRequests.length === 0 && notifications.length === 0 && (
+                  <div className="px-3 py-3 text-sm text-gray-500">No notifications</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="ml-3 relative">
+            <button onClick={() => setShowProfileMenu((s) => !s)} className="px-3 py-2 text-sm rounded-lg border border-[var(--ag-border)] hover:bg-gray-50 flex items-center gap-2">
+              <span className="h-6 w-6 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center font-semibold">
+                {(String(user?.name || user?.email || 'E').charAt(0) || 'E').toUpperCase()}
+              </span>
+              <span className="hidden sm:block">{user?.name || user?.email || 'Expert'}</span>
+            </button>
+            {showProfileMenu && (
+              <div className="absolute right-0 mt-2 w-44 bg-white border border-[var(--ag-border)] rounded-lg shadow z-10">
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm" onClick={() => setShowProfileMenu(false)}>Profile Settings</button>
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm" onClick={handleLogout}>Logout</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="ag-card p-2 flex gap-2">
-        <button onClick={() => setActiveTab('overview')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'overview' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Overview</button>
-        <button onClick={() => setActiveTab('chat')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'chat' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Chat</button>
-        <button onClick={() => setActiveTab('requests')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'requests' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Requests</button>
+        <button onClick={() => setActiveTab('chat')} className={`px-3 py-2 rounded-lg text-sm relative ${activeTab === 'chat' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>
+          Chat
+          {totalUnread > 0 && (
+            <span className="absolute -right-2 -top-2 inline-flex items-center justify-center text-[10px] h-4 min-w-4 px-1 rounded-full bg-green-600 text-white">{totalUnread}</span>
+          )}
+        </button>
+        <button onClick={() => setActiveTab('requests')} className={`px-3 py-2 rounded-lg text-sm relative ${activeTab === 'requests' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>
+          Requests
+          {(pendingRequests?.length || 0) > 0 && (
+            <span className="absolute -right-2 -top-2 inline-flex items-center justify-center text-[10px] h-4 min-w-4 px-1 rounded-full bg-green-600 text-white">{pendingRequests.length}</span>
+          )}
+        </button>
       </div>
 
       {/* Overview Content */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard title="Open chats" value={messages.filter(m => !m.inbound).length} />
-            <StatCard title="New messages" value={messages.filter(m => m.inbound).length} />
-            <StatCard title="Today’s consultations" value={3} />
-            <StatCard title="Avg. response time" value="< 2m" />
-          </div>
-
-          {/* Recent messages */}
-          <div className="ag-card p-4 space-y-3">
-            <div className="font-semibold">Recent Messages</div>
-            <div className="max-h-56 overflow-y-auto space-y-2">
-              {messages.slice(-8).reverse().map((m, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className={`h-2 w-2 rounded-full mt-2 ${m.inbound ? 'bg-blue-500' : 'bg-green-500'}`} />
-                  <div className="text-sm">
-                    <div className="text-gray-600">{m.inbound ? (m.fromName || m.fromEmail) : 'You'}</div>
-                    <div>{m.text}</div>
-                  </div>
-                </div>
-              ))}
-              {messages.length === 0 && <div className="text-sm text-gray-500">No messages yet.</div>}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Overview removed */}
 
       {/* Requests Content */}
       {activeTab === 'requests' && (
@@ -303,7 +373,8 @@ const ExpertDashboard = () => {
             <div className="max-h-96 overflow-y-auto divide-y divide-[var(--ag-border)]">
               {conversations.map((c) => (
                 <button key={c._id} onClick={async () => {
-                  setSelectedEmail((c.participantEmails || []).find(e => e !== (user?.email || '').toLowerCase()) || '');
+                  const peerEmailLocal = (c.participantEmails || []).find(e => e !== (user?.email || '').toLowerCase()) || '';
+                  setSelectedEmail(peerEmailLocal);
                   const msgs = await chatApi.listMessages(c._id);
                   if (msgs?.success) {
                     const myEmail = String(user?.email || '').toLowerCase();
@@ -314,13 +385,32 @@ const ExpertDashboard = () => {
                     }));
                     setMessages(hydrated);
                   }
+                  // Mark as read and clear unread count for this conversation
+                  try { await chatApi.markRead(c._id); } catch (_) {}
+                  setUnreadByConvo((m) => ({ ...m, [c._id]: 0 }));
                 }} className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${selectedEmail && (c.participantEmails||[]).includes(selectedEmail) ? 'bg-gray-50' : ''}`}>
                   <div className="flex items-center justify-between">
-                    <div className="font-medium">{((c.participantEmails||[]).find(e => e !== (user?.email || '').toLowerCase())) || 'Conversation'}</div>
-                    <div className="text-xs text-gray-500">{new Date(c.lastMessageAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div className="font-medium">
+                      {(() => {
+                        const peer = ((c.participantEmails||[]).find(e => e !== (user?.email || '').toLowerCase())) || '';
+                        const label = displayNameByEmail[String(peer).toLowerCase()] || peer || 'Conversation';
+                        return label;
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(unreadByConvo[c._id] || 0) > 0 && (
+                        <span className="inline-flex items-center justify-center text-[10px] h-5 min-w-5 px-1 rounded-full bg-green-600 text-white">
+                          {unreadByConvo[c._id]}
+                        </span>
+                      )}
+                      <div className="text-xs text-gray-500">{new Date(c.lastMessageAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
                   </div>
                   <div className="text-xs text-gray-600 truncate">{c.lastMessageText}</div>
-                  <div className="text-xs text-gray-500">{(c.participantEmails||[]).join(', ')}</div>
+                  <div className="text-xs text-gray-500">{(() => {
+                    const peer = ((c.participantEmails||[]).find(e => e !== (user?.email || '').toLowerCase())) || '';
+                    return displayNameByEmail[String(peer).toLowerCase()] || peer;
+                  })()}</div>
                 </button>
               ))}
               {conversations.length === 0 && (

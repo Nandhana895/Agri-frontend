@@ -86,3 +86,24 @@ export const chatApi = {
     return res.data;
   }
 };
+
+export const profileApi = {
+  async updateName(name) {
+    const res = await api.put('/auth/update-profile', { name });
+    return res.data;
+  },
+  async updatePassword(payload) {
+    const res = await api.put('/auth/update-password', payload);
+    return res.data;
+  },
+  async uploadAvatar(file) {
+    const form = new FormData();
+    form.append('avatar', file);
+    const res = await api.post('/auth/upload-avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    return res.data;
+  },
+  async me() {
+    const res = await api.get('/auth/me');
+    return res.data;
+  }
+};

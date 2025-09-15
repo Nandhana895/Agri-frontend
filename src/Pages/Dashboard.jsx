@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud } from 'lucide-react';
+import ManageProfileModal from '../Components/ManageProfileModal';
 import authService from '../services/authService';
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isManageOpen, setIsManageOpen] = useState(false);
   const [user, setUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,6 +87,9 @@ const Dashboard = () => {
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
                     <div className="px-4 py-2 text-sm text-gray-600">Signed in as<br />{user?.email}</div>
+                    <button onClick={() => { setIsManageOpen(true); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] flex items-center gap-2">
+                      <User className="w-4 h-4" /> Manage Profile
+                    </button>
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] flex items-center gap-2">
                       <LogOut className="w-4 h-4" /> Logout
                     </button>
@@ -100,6 +105,9 @@ const Dashboard = () => {
           <Outlet />
         </main>
       </div>
+      {isManageOpen && (
+        <ManageProfileModal isOpen={isManageOpen} onClose={() => setIsManageOpen(false)} user={user} />)
+      }
     </div>
   );
 };
