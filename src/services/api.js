@@ -60,5 +60,29 @@ export const chatApi = {
   async markRead(conversationId) {
     const res = await api.post(`/chat/conversations/${conversationId}/read`);
     return res.data;
+  },
+  async sendChatRequest(expertEmail, note = '') {
+    const res = await api.post('/chat/requests', { expertEmail, note });
+    return res.data;
+  },
+  async listMyRequests() {
+    const res = await api.get('/chat/requests/mine');
+    return res.data;
+  },
+  async listPendingRequests() {
+    const res = await api.get('/chat/requests/pending');
+    return res.data;
+  },
+  async approveRequest(id, note = '') {
+    const res = await api.post(`/chat/requests/${id}/approve`, { note });
+    return res.data;
+  },
+  async rejectRequest(id, note = '') {
+    const res = await api.post(`/chat/requests/${id}/reject`, { note });
+    return res.data;
+  },
+  async listApprovedPeers() {
+    const res = await api.get('/chat/approved-peers');
+    return res.data;
   }
 };

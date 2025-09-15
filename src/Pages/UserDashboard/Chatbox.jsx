@@ -16,6 +16,12 @@ const Chatbox = () => {
   const typingTimeoutRef = useRef(null);
   const [search, setSearch] = useState('');
   const [conversations, setConversations] = useState([]);
+  const [myRequests, setMyRequests] = useState([]);
+  const approvedEmails = new Set(
+    myRequests
+      .filter((r) => r.status === 'approved' && r.expert?.email)
+      .map((r) => String(r.expert.email).toLowerCase())
+  );
 
   useEffect(() => {
     const socket = getSocket();
@@ -57,6 +63,16 @@ const Chatbox = () => {
     })();
   }, []);
 
+  // Load my chat requests
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await chatApi.listMyRequests();
+        if (res?.success) setMyRequests(res.data || []);
+      } catch (_) {}
+    })();
+  }, []);
+
   // Load existing conversations to enrich expert list with latest message
   useEffect(() => {
     (async () => {
@@ -76,6 +92,9 @@ const Chatbox = () => {
         setIsOtherTyping(false);
         const email = selectedExpertEmail?.trim();
         if (!email) return;
+        if (!approvedEmails.has(email.toLowerCase())) {
+          return; // Not approved yet; don't open conversation
+        }
         const res = await chatApi.getOrCreateConversationByEmail(email);
         if (!res?.success || !res?.conversation?._id) return;
         const convoId = res.conversation._id;
@@ -106,6 +125,7 @@ const Chatbox = () => {
   const send = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
+    if (!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())) return;
     const socket = getSocket();
     const outgoing = { toEmail: selectedExpertEmail.trim(), text: text.trim() };
     socket.emit('send_message', outgoing, (ack) => {
@@ -173,6 +193,9 @@ const Chatbox = () => {
               const lastAt = convo?.lastMessageAt ? new Date(convo.lastMessageAt) : null;
               const time = lastAt ? lastAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
               const initials = (String(e.name || e.email).charAt(0) || '?').toUpperCase();
+              const email = String(e.email || '').toLowerCase();
+              const req = myRequests.find((r) => String(r.expert?.email || '').toLowerCase() === email);
+              const status = req?.status || 'none';
               return (
                 <button
                   key={e.email}
@@ -189,6 +212,29 @@ const Chatbox = () => {
                         {time && <div className="text-[10px] text-gray-500 flex-shrink-0">{time}</div>}
                       </div>
                       <div className="text-xs text-gray-600 truncate">{lastText || e.email}</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        {!approvedEmails.has(email) && (
+                          <button
+                            type="button"
+                            className="text-[10px] px-2 py-1 rounded bg-[var(--ag-primary-500)] text-white"
+                            onClick={async (ev) => {
+                              ev.stopPropagation();
+                              try {
+                                const r = await chatApi.sendChatRequest(email);
+                                if (r?.success) {
+                                  const mine = await chatApi.listMyRequests();
+                                  if (mine?.success) setMyRequests(mine.data || []);
+                                }
+                              } catch (_) {}
+                            }}
+                          >
+                            Request Chat
+                          </button>
+                        )}
+                        {status === 'pending' && <span className="text-[10px] text-amber-600">Pending approval</span>}
+                        {status === 'rejected' && <span className="text-[10px] text-red-600">Rejected</span>}
+                        {status === 'approved' && <span className="text-[10px] text-green-600">Approved</span>}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -202,7 +248,11 @@ const Chatbox = () => {
       <div className="ag-card p-0 overflow-hidden lg:col-span-2">
         <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
           <div className="text-sm text-gray-600">Chatting with: <span className="font-medium">{selectedExpertEmail || '— Select an expert'}</span></div>
-          {isOtherTyping && selectedExpertEmail && (
+          {!selectedExpertEmail && <div className="text-xs text-gray-500 mt-1">Select an expert to start</div>}
+          {selectedExpertEmail && !approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
+            <div className="text-xs text-amber-700 mt-1">Request approval from the expert to start chatting.</div>
+          )}
+          {isOtherTyping && selectedExpertEmail && approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
             <div className="text-xs text-[var(--ag-primary-600)] mt-1">typing…</div>
           )}
         </div>
@@ -228,9 +278,9 @@ const Chatbox = () => {
             placeholder="Type a message"
             rows={1}
             className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] resize-none"
-            disabled={!selectedExpertEmail}
+            disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}
           />
-          <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail}>Send</button>
+          <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}>Send</button>
         </form>
       </div>
     </div>

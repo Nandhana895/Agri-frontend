@@ -106,7 +106,8 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError(''); // Clear error when user types
+    setError('');
+     // Clear error when user types
     // On-type validation per field
     const { name, value } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));

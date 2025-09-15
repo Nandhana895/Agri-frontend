@@ -21,6 +21,8 @@ const ExpertDashboard = () => {
   const [composeTo, setComposeTo] = useState('');
   const [selectedEmail, setSelectedEmail] = useState('');
   const [availability, setAvailability] = useState(true);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [requestsTab, setRequestsTab] = useState('pending'); // pending | handled
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const scrollContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -75,6 +77,16 @@ const ExpertDashboard = () => {
       try {
         const data = await chatApi.listConversations();
         if (data?.success) setConversations(data.conversations || []);
+      } catch (_) {}
+    })();
+  }, []);
+
+  // Load pending chat requests
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await chatApi.listPendingRequests();
+        if (r?.success) setPendingRequests(r.data || []);
       } catch (_) {}
     })();
   }, []);
@@ -194,6 +206,7 @@ const ExpertDashboard = () => {
       <div className="ag-card p-2 flex gap-2">
         <button onClick={() => setActiveTab('overview')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'overview' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Overview</button>
         <button onClick={() => setActiveTab('chat')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'chat' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Chat</button>
+        <button onClick={() => setActiveTab('requests')} className={`px-3 py-2 rounded-lg text-sm ${activeTab === 'requests' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>Requests</button>
       </div>
 
       {/* Overview Content */}
@@ -226,6 +239,53 @@ const ExpertDashboard = () => {
         </div>
       )}
 
+      {/* Requests Content */}
+      {activeTab === 'requests' && (
+        <div className="ag-card p-0 overflow-hidden">
+          <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)] flex items-center justify-between">
+            <div className="font-semibold">Chat Requests</div>
+            <button
+              className="text-sm px-3 py-1 border rounded"
+              onClick={async () => { const r = await chatApi.listPendingRequests(); if (r?.success) setPendingRequests(r.data || []); }}
+            >Refresh</button>
+          </div>
+          <div className="divide-y divide-[var(--ag-border)]">
+            {pendingRequests.map((r) => (
+              <div key={r._id} className="p-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">{r.farmer?.name || r.farmer?.email || 'Farmer'}</div>
+                  <div className="text-xs text-gray-600">{r.farmer?.email}</div>
+                  {r.farmerNote && <div className="text-xs mt-1">“{r.farmerNote}”</div>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="px-3 py-1 bg-green-600 text-white rounded"
+                    onClick={async () => {
+                      const res = await chatApi.approveRequest(r._id);
+                      if (res?.success) {
+                        setPendingRequests((list) => list.filter((x) => x._id !== r._id));
+                      }
+                    }}
+                  >Accept</button>
+                  <button
+                    className="px-3 py-1 bg-red-600 text-white rounded"
+                    onClick={async () => {
+                      const res = await chatApi.rejectRequest(r._id);
+                      if (res?.success) {
+                        setPendingRequests((list) => list.filter((x) => x._id !== r._id));
+                      }
+                    }}
+                  >Reject</button>
+                </div>
+              </div>
+            ))}
+            {pendingRequests.length === 0 && (
+              <div className="p-4 text-sm text-gray-500">No pending requests.</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Chat Content */}
       {activeTab === 'chat' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -245,7 +305,15 @@ const ExpertDashboard = () => {
                 <button key={c._id} onClick={async () => {
                   setSelectedEmail((c.participantEmails || []).find(e => e !== (user?.email || '').toLowerCase()) || '');
                   const msgs = await chatApi.listMessages(c._id);
-                  if (msgs?.success) setMessages(msgs.messages || []);
+                  if (msgs?.success) {
+                    const myEmail = String(user?.email || '').toLowerCase();
+                    const hydrated = (msgs.messages || []).map((m) => ({
+                      ...m,
+                      inbound: String(m.fromEmail || '').toLowerCase() !== myEmail,
+                      ts: new Date(m.createdAt).getTime()
+                    }));
+                    setMessages(hydrated);
+                  }
                 }} className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${selectedEmail && (c.participantEmails||[]).includes(selectedEmail) ? 'bg-gray-50' : ''}`}>
                   <div className="flex items-center justify-between">
                     <div className="font-medium">{((c.participantEmails||[]).find(e => e !== (user?.email || '').toLowerCase())) || 'Conversation'}</div>
