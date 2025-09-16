@@ -28,6 +28,17 @@ const Dashboard = () => {
 
   useEffect(() => {
     setUser(authService.getCurrentUser());
+    
+    // Listen for user updates from profile modal
+    const handleUserUpdate = (event) => {
+      setUser(event.detail);
+    };
+    
+    window.addEventListener('userUpdated', handleUserUpdate);
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -80,13 +91,43 @@ const Dashboard = () => {
               </button>
               <div className="relative">
                 <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)]">
-                  <User className="w-4 h-4" />
+                  <div className="w-6 h-6 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
+                    {user?.avatarUrl ? (
+                      <img 
+                        src={user.avatarUrl} 
+                        alt="avatar" 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
                   <span>{user?.name || 'Farmer'}</span>
                   <svg className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
-                    <div className="px-4 py-2 text-sm text-gray-600">Signed in as<br />{user?.email}</div>
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
+                          {user?.avatarUrl ? (
+                            <img 
+                              src={user.avatarUrl} 
+                              alt="avatar" 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <span className="text-sm font-semibold">
+                              {(user?.name || 'U').charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>
+                          <div className="text-xs text-gray-500">{user?.email}</div>
+                        </div>
+                      </div>
+                    </div>
                     <button onClick={() => { setIsManageOpen(true); setIsProfileOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] flex items-center gap-2">
                       <User className="w-4 h-4" /> Manage Profile
                     </button>

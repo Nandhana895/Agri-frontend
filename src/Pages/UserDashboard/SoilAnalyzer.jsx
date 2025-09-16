@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 
@@ -16,8 +16,54 @@ const SoilAnalyzer = () => {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({ ph: '', organicMatter: '', moisture: '', nitrogen: '', phosphorus: '', potassium: '' });
+  const [touched, setTouched] = useState({ ph: false, organicMatter: false, moisture: false, nitrogen: false, phosphorus: false, potassium: false });
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState('');
+  const [ocrSummary, setOcrSummary] = useState('');
+  const [ocrText, setOcrText] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef(null);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const validateField = (name, value) => {
+    if (name === 'ph') {
+      if (value === '' || value === null) return 'pH is required';
+      const v = Number(value);
+      if (Number.isNaN(v)) return 'Enter a valid number';
+      if (v < 0 || v > 14) return 'pH must be between 0 and 14';
+      return '';
+    }
+    if (name === 'organicMatter' || name === 'moisture') {
+      if (value === '' || value === null) return '';
+      const v = Number(value);
+      if (Number.isNaN(v)) return 'Enter a valid number';
+      if (v < 0 || v > 100) return 'Value must be between 0 and 100';
+      return '';
+    }
+    if (name === 'nitrogen' || name === 'phosphorus' || name === 'potassium') {
+      if (value === '' || value === null) return '';
+      const v = Number(value);
+      if (Number.isNaN(v)) return 'Enter a valid number';
+      if (v < 0) return 'Value must be ≥ 0';
+      if (v > 5000) return 'Value looks too large';
+      return '';
+    }
+    return '';
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    setTouched((t) => ({ ...t, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((t) => ({ ...t, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,6 +82,22 @@ const SoilAnalyzer = () => {
         location: form.location
       };
       
+      // validate all before submit
+      const submitErrors = {
+        ph: validateField('ph', form.ph),
+        organicMatter: validateField('organicMatter', form.organicMatter),
+        moisture: validateField('moisture', form.moisture),
+        nitrogen: validateField('nitrogen', form.nitrogen),
+        phosphorus: validateField('phosphorus', form.phosphorus),
+        potassium: validateField('potassium', form.potassium)
+      };
+      setErrors((prev) => ({ ...prev, ...submitErrors }));
+      setTouched((t) => ({ ...t, ph: true, organicMatter: true, moisture: true, nitrogen: true, phosphorus: true, potassium: true }));
+      if (Object.values(submitErrors).some(Boolean)) {
+        setLoading(false);
+        return;
+      }
+
       const response = await api.post('/farmer/soil-analysis', payload);
       
       if (response.data?.success) {
@@ -49,6 +111,74 @@ const SoilAnalyzer = () => {
       setLoading(false);
     }
   };
+
+  const handleOcrUpload = async (file) => {
+    if (!file) return;
+    setOcrError('');
+    setOcrSummary('');
+    setOcrText('');
+    setUploadProgress(0);
+    setOcrLoading(true);
+    try {
+      if (file.type !== 'application/pdf') {
+        setOcrError('Please upload a PDF file.');
+        setOcrLoading(false);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setOcrError('PDF size must be under 10MB.');
+        setOcrLoading(false);
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/farmer/ocr/pdf-summary', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+          if (!evt.total) return;
+          const pct = Math.round((evt.loaded * 100) / evt.total);
+          setUploadProgress(pct);
+        }
+      });
+      if (res.data?.success) {
+        setOcrSummary(res.data.summary || '');
+        setOcrText(res.data.text || '');
+      } else {
+        setOcrError(res.data?.message || 'OCR failed.');
+      }
+    } catch (e) {
+      setOcrError(e?.response?.data?.message || 'OCR failed.');
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleOcrUpload(file);
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const isFormValid = !validateField('ph', form.ph)
+    && !validateField('organicMatter', form.organicMatter)
+    && !validateField('moisture', form.moisture)
+    && !validateField('nitrogen', form.nitrogen)
+    && !validateField('phosphorus', form.phosphorus)
+    && !validateField('potassium', form.potassium);
 
   return (
     <div className="space-y-6">
@@ -90,11 +220,13 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="14"
                 value={form.ph} 
-                onChange={handleChange} 
-                className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.ph && errors.ph ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 required 
                 placeholder="e.g., 6.5"
               />
+              {touched.ph && errors.ph && (<p className="mt-1 text-xs text-red-600">{errors.ph}</p>)}
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Organic Matter (%)</label>
@@ -105,10 +237,12 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="100"
                 value={form.organicMatter} 
-                onChange={handleChange} 
-                className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.organicMatter && errors.organicMatter ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 placeholder="e.g., 2.5"
               />
+              {touched.organicMatter && errors.organicMatter && (<p className="mt-1 text-xs text-red-600">{errors.organicMatter}</p>)}
             </div>
           </div>
 
@@ -122,10 +256,12 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="100"
                 value={form.moisture} 
-                onChange={handleChange} 
-                className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.moisture && errors.moisture ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 placeholder="e.g., 25"
               />
+              {touched.moisture && errors.moisture && (<p className="mt-1 text-xs text-red-600">{errors.moisture}</p>)}
             </div>
             <div>
               <label className="block text-sm text-gray-700 mb-1">Soil Type</label>
@@ -156,10 +292,12 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.nitrogen} 
-                  onChange={handleChange} 
-                  className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.nitrogen && errors.nitrogen ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 40"
                 />
+                {touched.nitrogen && errors.nitrogen && (<p className="mt-1 text-xs text-red-600">{errors.nitrogen}</p>)}
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">Phosphorus (mg/kg)</label>
@@ -168,10 +306,12 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.phosphorus} 
-                  onChange={handleChange} 
-                  className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.phosphorus && errors.phosphorus ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 35"
                 />
+                {touched.phosphorus && errors.phosphorus && (<p className="mt-1 text-xs text-red-600">{errors.phosphorus}</p>)}
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">Potassium (mg/kg)</label>
@@ -180,10 +320,12 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.potassium} 
-                  onChange={handleChange} 
-                  className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.potassium && errors.potassium ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 50"
                 />
+                {touched.potassium && errors.potassium && (<p className="mt-1 text-xs text-red-600">{errors.potassium}</p>)}
               </div>
             </div>
           </div>
@@ -202,76 +344,63 @@ const SoilAnalyzer = () => {
 
           <button 
             type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--ag-primary-500)] text-white py-2 rounded-lg hover:bg-[var(--ag-primary-600)] disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || !isFormValid}
+            className="w-full bg-[var(--ag-primary-600)] text-white py-2 rounded-lg hover:bg-[var(--ag-primary-700)] disabled:opacity-50 disabled:cursor-not-allowed shadow"
           >
             {loading ? 'Analyzing...' : 'Analyze Soil Health'}
           </button>
         </motion.form>
 
         <motion.div className="ag-card p-6" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Results</h3>
-          {analysis ? (
-            <div className="space-y-4">
-              <div className={`p-4 rounded-lg border ${
-                analysis.overallHealth === 'Excellent' ? 'bg-green-50 border-green-200' :
-                analysis.overallHealth === 'Good' ? 'bg-blue-50 border-blue-200' :
-                analysis.overallHealth === 'Fair' ? 'bg-yellow-50 border-yellow-200' :
-                'bg-red-50 border-red-200'
-              }`}>
-                <h4 className="font-medium text-gray-900 mb-2">Overall Soil Health</h4>
-                <p className={`text-lg font-semibold ${
-                  analysis.overallHealth === 'Excellent' ? 'text-green-800' :
-                  analysis.overallHealth === 'Good' ? 'text-blue-800' :
-                  analysis.overallHealth === 'Fair' ? 'text-yellow-800' :
-                  'text-red-800'
-                }`}>
-                  {analysis.overallHealth}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">{analysis.healthDescription}</p>
-              </div>
-
-              {analysis.recommendations && analysis.recommendations.length > 0 && (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-gray-900">Recommendations:</h5>
-                  <ul className="space-y-1 text-sm">
-                    {analysis.recommendations.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-[var(--ag-primary-500)] mt-1">•</span>
-                        <span>{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {analysis.fertilizerRecommendations && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h5 className="font-medium text-blue-900 mb-1">Fertilizer Recommendations:</h5>
-                  <p className="text-blue-800 text-sm">{analysis.fertilizerRecommendations}</p>
-                </div>
-              )}
-
-              {analysis.cropSuitability && (
-                <div className="space-y-2">
-                  <h5 className="font-medium text-gray-900">Suitable Crops:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {analysis.cropSuitability.map((crop, i) => (
-                      <span key={i} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                        {crop}
-                      </span>
-                    ))}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Soil Report (PDF)</h3>
+            <p className="text-sm text-gray-600 mb-3">Upload a lab soil report PDF. We'll extract the text and show a concise summary.</p>
+            {ocrError && (
+              <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm mb-3">{ocrError}</div>
+            )}
+            <div
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? 'border-[var(--ag-primary-500)] bg-[var(--ag-primary-50)]' : 'border-[var(--ag-border)] bg-white'}`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handleOcrUpload(e.target.files?.[0] || null)}
+              />
+              <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+              <p className="text-sm text-gray-700">Drag & drop your PDF here, or</p>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-2 px-3 py-1.5 bg-[var(--ag-primary-600)] text-white rounded-md text-sm hover:bg-[var(--ag-primary-700)] disabled:opacity-50 shadow" disabled={ocrLoading}>Browse PDF</button>
+              <p className="text-xs text-gray-500 mt-2">PDF only, up to 10MB</p>
+              {ocrLoading && (
+                <div className="mt-3">
+                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div className="h-2 bg-[var(--ag-primary-500)]" style={{ width: `${uploadProgress}%` }} />
                   </div>
+                  <p className="text-xs text-gray-600 mt-1">Uploading... {uploadProgress}%</p>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-              <p className="text-gray-500 text-sm">Enter your soil test data to get detailed analysis</p>
-              <p className="text-gray-400 text-xs mt-1">Provide accurate measurements for best results</p>
+          </div>
+          {ocrSummary && (
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700">✔</span>
+                <h4 className="text-md font-medium text-gray-900">PDF Summary</h4>
+              </div>
+              <ul className="p-4 bg-gray-50 border border-[var(--ag-border)] rounded-lg text-sm text-gray-800 space-y-2">
+                {ocrSummary.split('\n').filter(Boolean).map((line, idx) => {
+                  const clean = line.replace(/^\s*-\s*/, '');
+                  return (<li key={idx} className="flex items-start gap-2"><span className="mt-1 text-[var(--ag-primary-600)]">•</span><span>{clean}</span></li>);
+                })}
+              </ul>
+              <details className="mt-2">
+                <summary className="text-xs text-gray-600 cursor-pointer">Show extracted text</summary>
+                <div className="mt-2 p-3 bg-white border border-[var(--ag-border)] rounded text-xs text-gray-700 whitespace-pre-wrap max-h-64 overflow-auto">{ocrText}</div>
+              </details>
             </div>
           )}
         </motion.div>
