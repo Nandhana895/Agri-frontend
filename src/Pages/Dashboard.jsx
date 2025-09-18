@@ -22,6 +22,13 @@ const Dashboard = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [lang, setLang] = useState(() => {
+    try {
+      return localStorage.getItem('ag_lang') || 'en';
+    } catch(_) {
+      return 'en';
+    }
+  });
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -40,6 +47,13 @@ const Dashboard = () => {
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
   }, []);
+
+  // When language changes here, persist and broadcast so inner pages can react
+  const handleLanguageChange = (next) => {
+    setLang(next);
+    try { localStorage.setItem('ag_lang', next); } catch(_) {}
+    try { window.dispatchEvent(new CustomEvent('langChanged', { detail: next })); } catch(_) {}
+  };
 
   const handleLogout = () => {
     authService.logout();
@@ -86,6 +100,15 @@ const Dashboard = () => {
               <h1 className="ag-display text-xl font-semibold text-gray-900">Farmer Dashboard</h1>
             </div>
             <div className="flex items-center gap-2">
+              {/* Language selector (English / Malayalam) visible on all farmer pages */}
+              <select
+                value={lang}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                className="hidden sm:block px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)]"
+              >
+                <option value="en">English</option>
+                <option value="ml">Malayalam</option>
+              </select>
               <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)]">
                 <Bell className="w-5 h-5 text-gray-700" />
               </button>

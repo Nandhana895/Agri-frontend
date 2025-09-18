@@ -9,6 +9,60 @@ const Reports = () => {
   const [error, setError] = useState('');
   const [generating, setGenerating] = useState(false);
   const user = authService.getCurrentUser();
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
+  });
+
+  const t = {
+    en: {
+      loading: 'Loading reports...',
+      title: 'Farm Reports',
+      subtitle: "Generate comprehensive reports about your farm's performance, soil health, and recommendations.",
+      genTitle: 'Report Generation',
+      summaryTitle: 'Farm Summary',
+      summaryDesc: "Complete overview of your farm's current status, including soil health, crop recommendations, and performance metrics.",
+      soilTitle: 'Soil Analysis',
+      soilDesc: 'Detailed soil health report with pH levels, nutrient analysis, and improvement recommendations.',
+      cropTitle: 'Crop Recommendations',
+      cropDesc: 'AI-powered crop suggestions based on your soil conditions and climate data.',
+      generating: 'Generating...',
+      genSummary: 'Generate Summary Report',
+      genSoil: 'Generate Soil Report',
+      genCrop: 'Generate Crop Report',
+      generatedList: 'Generated Reports',
+      generatedWord: 'Generated',
+      download: 'Download',
+      emptyTitle: 'No reports generated yet',
+      emptySubtitle: 'Generate your first report using the options above'
+    },
+    ml: {
+      loading: 'റിപ്പോർട്ടുകൾ ലോഡ് ചെയ്യുന്നു...',
+      title: 'ഫാം റിപ്പോർട്ടുകൾ',
+      subtitle: 'നിങ്ങളുടെ ഫാമിന്റെ പ്രകടനം, മണ്ണ് ആരോഗ്യം, ശുപാർശകൾ എന്നിവയുടെ സമഗ്ര റിപ്പോർട്ടുകൾ സൃഷ്ടിക്കുക.',
+      genTitle: 'റിപ്പോർട്ട് ജനറേഷൻ',
+      summaryTitle: 'ഫാം സമരി',
+      summaryDesc: 'നിങ്ങളുടെ ഫാമിന്റെ നിലവിലെ നിലയുടെ സമ്പൂർണ്ണ അവലോകനം: മണ്ണ് ആരോഗ്യം, വിള ശുപാർശകൾ, പ്രകടന മീറ്റ്രിക്കുകൾ.',
+      soilTitle: 'മണ്ണ് വിശകലനം',
+      soilDesc: 'pH നിരക്കുകൾ, പോഷക വിശകലനം, മെച്ചപ്പെടുത്തൽ നിർദ്ദേശങ്ങൾ എന്നിവയുള്ള വിശദമായ മണ്ണ് റിപ്പോർട്ട്.',
+      cropTitle: 'വിള ശുപാർശകൾ',
+      cropDesc: 'മണ്ണിന്റെ അവസ്ഥയും കാലാവസ്ഥ ഡാറ്റയും അടിസ്ഥാനമാക്കി AI നൽകുന്ന വിള നിർദ്ദേശങ്ങൾ.',
+      generating: 'ജനറേറ്റ് ചെയ്യുന്നു...',
+      genSummary: 'സമരി റിപ്പോർട്ട് ജനറേറ്റ് ചെയ്യുക',
+      genSoil: 'മണ്ണ് റിപ്പോർട്ട് ജനറേറ്റ് ചെയ്യുക',
+      genCrop: 'വിള റിപ്പോർട്ട് ജനറേറ്റ് ചെയ്യുക',
+      generatedList: 'സൃഷ്ടിച്ച റിപ്പോർട്ടുകൾ',
+      generatedWord: 'സൃഷ്ടിച്ചത്',
+      download: 'ഡൗൺലോഡ്',
+      emptyTitle: 'ഇനിയും റിപ്പോർട്ടുകൾ സൃഷ്ടിച്ചിട്ടില്ല',
+      emptySubtitle: 'മുകളിൽ കാണുന്ന ഓപ്ഷനുകൾ ഉപയോഗിച്ച് നിങ്ങളുടെ ആദ്യ റിപ്പോർട്ട് സൃഷ്ടിക്കുക'
+    }
+  }[lang];
+
+  useEffect(() => {
+    const handler = (e) => setLang(e?.detail || 'en');
+    window.addEventListener('langChanged', handler);
+    return () => window.removeEventListener('langChanged', handler);
+  }, []);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -72,7 +126,7 @@ const Reports = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--ag-primary-500)] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading reports...</p>
+          <p className="text-gray-600">{t.loading}</p>
         </div>
       </div>
     );
@@ -91,8 +145,8 @@ const Reports = () => {
         <div className="ag-hero-gradient p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Farm Reports</h2>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">Generate comprehensive reports about your farm's performance, soil health, and recommendations.</p>
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">{t.title}</h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
             </div>
           </div>
         </div>
@@ -117,15 +171,15 @@ const Reports = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Farm Summary</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.summaryTitle}</h3>
           </div>
-          <p className="text-gray-600 text-sm mb-4">Complete overview of your farm's current status, including soil health, crop recommendations, and performance metrics.</p>
+          <p className="text-gray-600 text-sm mb-4">{t.summaryDesc}</p>
           <button
             onClick={() => generateReport('summary')}
             disabled={generating}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            {generating ? 'Generating...' : 'Generate Summary Report'}
+            {generating ? t.generating : t.genSummary}
           </button>
         </motion.div>
 
@@ -140,15 +194,15 @@ const Reports = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Soil Analysis</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.soilTitle}</h3>
           </div>
-          <p className="text-gray-600 text-sm mb-4">Detailed soil health report with pH levels, nutrient analysis, and improvement recommendations.</p>
+          <p className="text-gray-600 text-sm mb-4">{t.soilDesc}</p>
           <button
             onClick={() => generateReport('soil')}
             disabled={generating}
             className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
           >
-            {generating ? 'Generating...' : 'Generate Soil Report'}
+            {generating ? t.generating : t.genSoil}
           </button>
         </motion.div>
 
@@ -163,15 +217,15 @@ const Reports = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Crop Recommendations</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t.cropTitle}</h3>
           </div>
-          <p className="text-gray-600 text-sm mb-4">AI-powered crop suggestions based on your soil conditions and climate data.</p>
+          <p className="text-gray-600 text-sm mb-4">{t.cropDesc}</p>
           <button
             onClick={() => generateReport('crops')}
             disabled={generating}
             className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
           >
-            {generating ? 'Generating...' : 'Generate Crop Report'}
+            {generating ? t.generating : t.genCrop}
           </button>
         </motion.div>
       </div>
@@ -182,7 +236,7 @@ const Reports = () => {
         animate={{ opacity: 1, y: 0 }}
         className="ag-card p-6"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Generated Reports</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.generatedList}</h3>
         {reports.length > 0 ? (
           <div className="space-y-3">
             {reports.map((report) => (
@@ -196,7 +250,7 @@ const Reports = () => {
                   <div>
                     <p className="font-medium text-gray-900">{report.name}</p>
                     <p className="text-sm text-gray-500">
-                      {report.type} • Generated {new Date(report.createdAt).toLocaleDateString()}
+                      {report.type} • {t.generatedWord} {new Date(report.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -204,7 +258,7 @@ const Reports = () => {
                   onClick={() => downloadReport(report.id)}
                   className="px-3 py-1 text-sm bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]"
                 >
-                  Download
+                  {t.download}
                 </button>
               </div>
             ))}
@@ -214,8 +268,8 @@ const Reports = () => {
             <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-gray-500 text-sm">No reports generated yet</p>
-            <p className="text-gray-400 text-xs mt-1">Generate your first report using the options above</p>
+            <p className="text-gray-500 text-sm">{t.emptyTitle}</p>
+            <p className="text-gray-400 text-xs mt-1">{t.emptySubtitle}</p>
           </div>
         )}
       </motion.div>

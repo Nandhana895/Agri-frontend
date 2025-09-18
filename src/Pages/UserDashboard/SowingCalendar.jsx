@@ -14,7 +14,11 @@ const SowingCalendar = () => {
   const [error, setError] = useState('');
   const [cropOptions, setCropOptions] = useState([]);
   const [selectedResult, setSelectedResult] = useState(null);
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState(() => {
+    try {
+      return localStorage.getItem('ag_lang') || 'en';
+    } catch(_) { return 'en'; }
+  });
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
   // Localization data
@@ -46,31 +50,31 @@ const SowingCalendar = () => {
         Zaid: 'Zaid (Summer)'
       }
     },
-    hi: {
-      title: 'बुवाई कैलेंडर',
-      subtitle: 'अपनी फसलों के लिए सही समय खोजें',
-      cropLabel: 'फसल चुनें',
-      regionLabel: 'क्षेत्र',
-      seasonLabel: 'मौसम (वैकल्पिक)',
-      searchButton: 'कैलेंडर खोजें',
-      noResults: 'आपके क्षेत्र में इस फसल के लिए कोई बुवाई कैलेंडर नहीं मिला',
-      contactMessage: 'कृपया सहायता के लिए स्थानीय कृषि कार्यालय से संपर्क करें',
-      ideal: 'आदर्श',
-      possible: 'संभव',
-      notRecommended: 'अनुशंसित नहीं',
-      early: 'जल्दी',
-      late: 'देर',
-      onTime: 'सही समय',
-      earlyStatus: 'जल्दी',
-      lateStatus: 'देर',
-      addToLogbook: 'फार्म लॉगबुक में जोड़ें',
-      exportPDF: 'PDF में निर्यात करें',
-      language: 'भाषा',
-      months: ['जन', 'फर', 'मार', 'अप्र', 'मई', 'जून', 'जुल', 'अग', 'सित', 'अक्ट', 'नव', 'दिस'],
+    ml: {
+      title: ' വിതൈകാലണ്ടർ',
+      subtitle: 'നിങ്ങളുടെ വിളകൾ വിതയ്ക്കാനുള്ള മികച്ച സമയം കണ്ടെത്തുക',
+      cropLabel: 'വിള തിരഞ്ഞെടുക്കുക',
+      regionLabel: 'പ്രദേശം',
+      seasonLabel: 'സീസൺ (ഐച്ഛികം)',
+      searchButton: 'കാലണ്ടർ തിരയുക',
+      noResults: 'നിങ്ങളുടെ പ്രദേശത്ത് ഈ വിളയ്ക്കുള്ള കാലണ്ടർ കണ്ടെത്താനായില്ല',
+      contactMessage: 'സഹായത്തിന് ദയവായി പ്രാദേശിക കാർഷിക ഓഫീസുമായി ബന്ധപ്പെടുക',
+      ideal: 'ഉത്തമം',
+      possible: 'സാധ്യം',
+      notRecommended: 'ശുപാർശ ചെയ്യാനാകില്ല',
+      early: 'മുൻപ്',
+      late: 'ശേഷം',
+      onTime: 'സമയത്ത്',
+      earlyStatus: 'മുൻപ്',
+      lateStatus: 'ശേഷം',
+      addToLogbook: 'ഫാം ലോഗ്ബുക്കിൽ ചേർക്കുക',
+      exportPDF: 'PDF ആയി കയറ്റുമതി ചെയ്യുക',
+      language: 'ഭാഷ',
+      months: ['ജനു', 'ഫെബ്', 'മാര്‍', 'ഏപ്രി', 'മെയ്', 'ജൂണ്‍', 'ജൂലൈ', 'ആഗ', 'സെപ്', 'ഒക്', 'നവം', 'ഡിസം'],
       seasons: {
-        Kharif: 'खरीफ (मानसून)',
-        Rabi: 'रबी (सर्दी)',
-        Zaid: 'जायद (गर्मी)'
+        Kharif: 'ഖരീഫ് (മൺസൂൺ)',
+        Rabi: 'റബി (ശൈത്യകാലം)',
+        Zaid: 'സൈദ് (വേനൽ)'
       }
     }
   };
@@ -273,11 +277,15 @@ const SowingCalendar = () => {
             <div className="flex items-center gap-3">
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                onChange={(e) => {
+                  setLanguage(e.target.value);
+                  try { localStorage.setItem('ag_lang', e.target.value); } catch(_) {}
+                  try { window.dispatchEvent(new CustomEvent('langChanged', { detail: e.target.value })); } catch(_) {}
+                }}
                 className="px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] bg-white"
               >
                 <option value="en">English</option>
-                <option value="hi">हिन्दी</option>
+                <option value="ml">Malayalam</option>
               </select>
             </div>
           </div>

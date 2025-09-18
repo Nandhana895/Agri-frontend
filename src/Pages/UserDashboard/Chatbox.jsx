@@ -17,6 +17,51 @@ const Chatbox = () => {
   const [search, setSearch] = useState('');
   const [conversations, setConversations] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
+  });
+  const t = {
+    en: {
+      experts: 'Experts',
+      searchPh: 'Search experts by name or email',
+      requestChat: 'Request Chat',
+      pending: 'Pending approval',
+      rejected: 'Rejected',
+      approved: 'Approved',
+      noExperts: 'No experts available.',
+      chattingWith: 'Chatting with:',
+      selectExpert: '— Select an expert',
+      selectToStart: 'Select an expert to start',
+      needApproval: 'Request approval from the expert to start chatting.',
+      typing: 'typing…',
+      you: 'You',
+      typeMsg: 'Type a message',
+      send: 'Send'
+    },
+    ml: {
+      experts: 'വിദഗ്ധർ',
+      searchPh: 'പേര് അല്ലെങ്കിൽ ഇമെയിൽ ഉപയോഗിച്ച് വിദഗ്ധരെ തിരയുക',
+      requestChat: 'ചാറ്റ് അഭ്യർത്ഥിക്കുക',
+      pending: 'അംഗീകാരം കാത്തിരിക്കുന്നു',
+      rejected: 'നിരസിച്ചു',
+      approved: 'അംഗീകരിച്ചു',
+      noExperts: 'വിദഗ്ധർ ലഭ്യമായിട്ടില്ല.',
+      chattingWith: 'ചാറ്റ് ചെയ്യുന്നത്:',
+      selectExpert: '— ഒരു വിദഗ്ധനെ തിരഞ്ഞെടുക്കുക',
+      selectToStart: 'ആരംഭിക്കാൻ ഒരു വിദഗ്ധനെ തിരഞ്ഞെടുക്കുക',
+      needApproval: 'ചാറ്റ് ആരംഭിക്കാൻ വിദഗ്ധന്റെ അംഗീകാരം അഭ്യർത്ഥിക്കുക.',
+      typing: 'ടൈപ്പിംഗ്…',
+      you: 'നിങ്ങൾ',
+      typeMsg: 'സന്ദേശം ടൈപ്പ് ചെയ്യുക',
+      send: 'അയക്കുക'
+    }
+  }[lang];
+
+  useEffect(() => {
+    const handler = (e) => setLang(e?.detail || 'en');
+    window.addEventListener('langChanged', handler);
+    return () => window.removeEventListener('langChanged', handler);
+  }, []);
   const approvedEmails = new Set(
     myRequests
       .filter((r) => r.status === 'approved' && r.expert?.email)
@@ -167,12 +212,12 @@ const Chatbox = () => {
       {/* Left: Experts list */}
       <div className="ag-card p-0 overflow-hidden">
         <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
-          <div className="font-medium">Experts</div>
+          <div className="font-medium">{t.experts}</div>
           <div className="mt-2">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search experts by name or email"
+              placeholder={t.searchPh}
               className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
             />
           </div>
@@ -228,32 +273,32 @@ const Chatbox = () => {
                               } catch (_) {}
                             }}
                           >
-                            Request Chat
+                          {t.requestChat}
                           </button>
                         )}
-                        {status === 'pending' && <span className="text-[10px] text-amber-600">Pending approval</span>}
-                        {status === 'rejected' && <span className="text-[10px] text-red-600">Rejected</span>}
-                        {status === 'approved' && <span className="text-[10px] text-green-600">Approved</span>}
+                      {status === 'pending' && <span className="text-[10px] text-amber-600">{t.pending}</span>}
+                      {status === 'rejected' && <span className="text-[10px] text-red-600">{t.rejected}</span>}
+                      {status === 'approved' && <span className="text-[10px] text-green-600">{t.approved}</span>}
                       </div>
                     </div>
                   </div>
                 </button>
               );
             })}
-          {experts.length === 0 && <div className="p-4 text-sm text-gray-500">No experts available.</div>}
+          {experts.length === 0 && <div className="p-4 text-sm text-gray-500">{t.noExperts}</div>}
         </div>
       </div>
 
       {/* Right: Conversation */}
       <div className="ag-card p-0 overflow-hidden lg:col-span-2">
         <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
-          <div className="text-sm text-gray-600">Chatting with: <span className="font-medium">{selectedExpertEmail || '— Select an expert'}</span></div>
-          {!selectedExpertEmail && <div className="text-xs text-gray-500 mt-1">Select an expert to start</div>}
+          <div className="text-sm text-gray-600">{t.chattingWith} <span className="font-medium">{selectedExpertEmail || t.selectExpert}</span></div>
+          {!selectedExpertEmail && <div className="text-xs text-gray-500 mt-1">{t.selectToStart}</div>}
           {selectedExpertEmail && !approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
-            <div className="text-xs text-amber-700 mt-1">Request approval from the expert to start chatting.</div>
+            <div className="text-xs text-amber-700 mt-1">{t.needApproval}</div>
           )}
           {isOtherTyping && selectedExpertEmail && approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
-            <div className="text-xs text-[var(--ag-primary-600)] mt-1">typing…</div>
+            <div className="text-xs text-[var(--ag-primary-600)] mt-1">{t.typing}</div>
           )}
         </div>
         <div ref={scrollContainerRef} className="h-80 overflow-y-auto p-4 space-y-3 bg-[var(--ag-muted)]">
@@ -264,7 +309,7 @@ const Chatbox = () => {
               animate={{ opacity: 1, y: 0 }}
               className={`max-w-md px-3 py-2 rounded-2xl shadow-sm ${m.inbound ? 'bg-white border border-[var(--ag-border)]' : 'bg-[var(--ag-primary-500)] text-white ml-auto'}`}
             >
-              <div className="text-xs opacity-70 mb-0.5">{m.inbound ? `${m.fromName || m.fromEmail}` : 'You'}</div>
+              <div className="text-xs opacity-70 mb-0.5">{m.inbound ? `${m.fromName || m.fromEmail}` : t.you}</div>
               <div className="whitespace-pre-wrap break-words">{m.text}</div>
               <div className={`text-[10px] mt-1 ${m.inbound ? 'text-gray-500' : 'text-white/80'} text-right`}>{formatTime(m.ts || m.createdAt)}</div>
             </motion.div>
@@ -275,12 +320,12 @@ const Chatbox = () => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Type a message"
+            placeholder={t.typeMsg}
             rows={1}
             className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] resize-none"
             disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}
           />
-          <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}>Send</button>
+          <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}>{t.send}</button>
         </form>
       </div>
     </div>

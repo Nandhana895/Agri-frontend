@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 
@@ -25,13 +25,59 @@ const SoilAnalyzer = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
+  });
+
+  const t = {
+    en: {
+      title: 'Soil Health Analyzer',
+      subtitle: 'Analyze your soil composition and get detailed recommendations for optimal crop growth.',
+      formTitle: 'Soil Test Data',
+      ph: 'Soil pH *', phPh: 'e.g., 6.5', phReq: 'pH is required', phNum: 'Enter a valid number', phRange: 'pH must be between 0 and 14',
+      organic: 'Organic Matter (%)', organicPh: 'e.g., 2.5',
+      moisture: 'Moisture Content (%)', moisturePh: 'e.g., 25',
+      soilType: 'Soil Type', selectSoil: 'Select soil type',
+      nutrientTitle: 'Nutrient Analysis (Optional)',
+      n: 'Nitrogen (mg/kg)', nPh: 'e.g., 40',
+      p: 'Phosphorus (mg/kg)', pPh: 'e.g., 35',
+      k: 'Potassium (mg/kg)', kPh: 'e.g., 50',
+      location: 'Location (Optional)', locationPh: 'e.g., Field A, North Section',
+      analyzeBtn: 'Analyze Soil Health', analyzing: 'Analyzing...',
+      uploadTitle: 'Upload Soil Report (PDF)', uploadHint: "Upload a lab soil report PDF. We'll extract the text and show a concise summary.",
+      dragHere: 'Drag & drop your PDF here, or', browse: 'Browse PDF', pdfOnly: 'PDF only, up to 10MB', uploading: 'Uploading...', pdfSummary: 'PDF Summary', showText: 'Show extracted text'
+    },
+    ml: {
+      title: 'മണ്ണിന്റെ ആരോഗ്യ വിശകലനം',
+      subtitle: 'മണ്ണിന്റെ ഘടന വിശകലനം ചെയ്ത് മികച്ച വിളവെടുപ്പിന് വിശദമായ ശുപാർശകൾ നേടുക.',
+      formTitle: 'മണ്ണ് പരിശോധന ഡാറ്റ',
+      ph: 'മണ്ണിന്റെ pH *', phPh: 'ഉദാ., 6.5', phReq: 'pH ആവശ്യമാണ്', phNum: 'സരിയായ സംഖ്യ നൽകുക', phRange: 'pH 0 - 14 നിടയിൽ ആയിരിക്കണം',
+      organic: 'ഓർഗാനിക് മട്ടർ (%)', organicPh: 'ഉദാ., 2.5',
+      moisture: 'അതിസാന്ദ്രത (%)', moisturePh: 'ഉദാ., 25',
+      soilType: 'മണ്ണിന്റെ തരം', selectSoil: 'മണ്ണിന്റെ തരം തിരഞ്ഞെടുക്കുക',
+      nutrientTitle: 'പോഷക വിശകലനം (ഐച്ഛികം)',
+      n: 'നൈട്രജൻ (mg/kg)', nPh: 'ഉദാ., 40',
+      p: 'ഫോസ്ഫറസ് (mg/kg)', pPh: 'ഉദാ., 35',
+      k: 'പൊട്ടാസ്യം (mg/kg)', kPh: 'ഉദാ., 50',
+      location: 'സ്ഥലം (ഐച്ഛികം)', locationPh: 'ഉദാ., ഫീൽഡ് A, നോർത്തു സെക്ഷൻ',
+      analyzeBtn: 'മണ്ണ് ആരോഗ്യം വിശകലനം ചെയ്യുക', analyzing: 'വിശകലനം ചെയ്യുന്നു...',
+      uploadTitle: 'മണ്ണ് റിപ്പോർട്ട് അപ്‌ലോഡ് ചെയ്യുക (PDF)', uploadHint: 'ലാബ് മണ്ണ് റിപ്പോർട്ട് PDF അപ്‌ലോഡ് ചെയ്യുക. ഞങ്ങൾ ചുരുക്കം കാണിക്കും.',
+      dragHere: 'നിങ്ങളുടെ PDF ഇവിടെ ഡ്രാഗ് & ഡ്രോപ്പ് ചെയ്യുക, അല്ലെങ്കിൽ', browse: 'PDF തിരഞ്ഞെടുക്കുക', pdfOnly: 'PDF മാത്രം, 10MB വരെ', uploading: 'അപ്‌ലോഡ് ചെയ്യുന്നു...', pdfSummary: 'PDF ചുരുക്കം', showText: 'എക്സ്ട്രാക്റ്റഡ് ടെക്സ്റ്റ് കാണിക്കുക'
+    }
+  }[lang];
+
+  useEffect(() => {
+    const handler = (e) => setLang(e?.detail || 'en');
+    window.addEventListener('langChanged', handler);
+    return () => window.removeEventListener('langChanged', handler);
+  }, []);
 
   const validateField = (name, value) => {
     if (name === 'ph') {
-      if (value === '' || value === null) return 'pH is required';
+      if (value === '' || value === null) return t.phReq;
       const v = Number(value);
-      if (Number.isNaN(v)) return 'Enter a valid number';
-      if (v < 0 || v > 14) return 'pH must be between 0 and 14';
+      if (Number.isNaN(v)) return t.phNum;
+      if (v < 0 || v > 14) return t.phRange;
       return '';
     }
     if (name === 'organicMatter' || name === 'moisture') {
@@ -193,8 +239,8 @@ const SoilAnalyzer = () => {
         <div className="ag-hero-gradient p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Soil Health Analyzer</h2>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">Analyze your soil composition and get detailed recommendations for optimal crop growth.</p>
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">{t.title}</h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
             </div>
           </div>
         </div>
@@ -202,7 +248,7 @@ const SoilAnalyzer = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.form onSubmit={handleSubmit} className="ag-card p-6 space-y-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h3 className="text-lg font-semibold text-gray-900">Soil Test Data</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t.formTitle}</h3>
           
           {error && (
             <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
@@ -212,7 +258,7 @@ const SoilAnalyzer = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Soil pH *</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.ph}</label>
               <input 
                 name="ph" 
                 type="number" 
@@ -224,12 +270,12 @@ const SoilAnalyzer = () => {
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.ph && errors.ph ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 required 
-                placeholder="e.g., 6.5"
+                placeholder={t.phPh}
               />
               {touched.ph && errors.ph && (<p className="mt-1 text-xs text-red-600">{errors.ph}</p>)}
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Organic Matter (%)</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.organic}</label>
               <input 
                 name="organicMatter" 
                 type="number" 
@@ -240,7 +286,7 @@ const SoilAnalyzer = () => {
                 onChange={handleChange} 
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.organicMatter && errors.organicMatter ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
-                placeholder="e.g., 2.5"
+                placeholder={t.organicPh}
               />
               {touched.organicMatter && errors.organicMatter && (<p className="mt-1 text-xs text-red-600">{errors.organicMatter}</p>)}
             </div>
@@ -248,7 +294,7 @@ const SoilAnalyzer = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Moisture Content (%)</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.moisture}</label>
               <input 
                 name="moisture" 
                 type="number" 
@@ -259,19 +305,19 @@ const SoilAnalyzer = () => {
                 onChange={handleChange} 
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.moisture && errors.moisture ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
-                placeholder="e.g., 25"
+                placeholder={t.moisturePh}
               />
               {touched.moisture && errors.moisture && (<p className="mt-1 text-xs text-red-600">{errors.moisture}</p>)}
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Soil Type</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.soilType}</label>
               <select 
                 name="soilType" 
                 value={form.soilType} 
                 onChange={handleChange} 
                 className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
               >
-                <option value="">Select soil type</option>
+                <option value="">{t.selectSoil}</option>
                 <option value="clay">Clay</option>
                 <option value="sandy">Sandy</option>
                 <option value="loamy">Loamy</option>
@@ -283,10 +329,10 @@ const SoilAnalyzer = () => {
           </div>
 
           <div className="border-t pt-4">
-            <h4 className="text-md font-medium text-gray-900 mb-3">Nutrient Analysis (Optional)</h4>
+            <h4 className="text-md font-medium text-gray-900 mb-3">{t.nutrientTitle}</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Nitrogen (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.n}</label>
                 <input 
                   name="nitrogen" 
                   type="number" 
@@ -295,12 +341,12 @@ const SoilAnalyzer = () => {
                   onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.nitrogen && errors.nitrogen ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
-                  placeholder="e.g., 40"
+                  placeholder={t.nPh}
                 />
                 {touched.nitrogen && errors.nitrogen && (<p className="mt-1 text-xs text-red-600">{errors.nitrogen}</p>)}
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Phosphorus (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.p}</label>
                 <input 
                   name="phosphorus" 
                   type="number" 
@@ -309,12 +355,12 @@ const SoilAnalyzer = () => {
                   onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.phosphorus && errors.phosphorus ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
-                  placeholder="e.g., 35"
+                  placeholder={t.pPh}
                 />
                 {touched.phosphorus && errors.phosphorus && (<p className="mt-1 text-xs text-red-600">{errors.phosphorus}</p>)}
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Potassium (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.k}</label>
                 <input 
                   name="potassium" 
                   type="number" 
@@ -323,7 +369,7 @@ const SoilAnalyzer = () => {
                   onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.potassium && errors.potassium ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
-                  placeholder="e.g., 50"
+                  placeholder={t.kPh}
                 />
                 {touched.potassium && errors.potassium && (<p className="mt-1 text-xs text-red-600">{errors.potassium}</p>)}
               </div>
@@ -331,14 +377,14 @@ const SoilAnalyzer = () => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Location (Optional)</label>
+            <label className="block text-sm text-gray-700 mb-1">{t.location}</label>
             <input 
               name="location" 
               type="text"
               value={form.location} 
               onChange={handleChange} 
               className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
-              placeholder="e.g., Field A, North Section"
+              placeholder={t.locationPh}
             />
           </div>
 
@@ -347,14 +393,14 @@ const SoilAnalyzer = () => {
             disabled={loading || !isFormValid}
             className="w-full bg-[var(--ag-primary-600)] text-white py-2 rounded-lg hover:bg-[var(--ag-primary-700)] disabled:opacity-50 disabled:cursor-not-allowed shadow"
           >
-            {loading ? 'Analyzing...' : 'Analyze Soil Health'}
+            {loading ? t.analyzing : t.analyzeBtn}
           </button>
         </motion.form>
 
         <motion.div className="ag-card p-6" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Soil Report (PDF)</h3>
-            <p className="text-sm text-gray-600 mb-3">Upload a lab soil report PDF. We'll extract the text and show a concise summary.</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t.uploadTitle}</h3>
+            <p className="text-sm text-gray-600 mb-3">{t.uploadHint}</p>
             {ocrError && (
               <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm mb-3">{ocrError}</div>
             )}
@@ -372,15 +418,15 @@ const SoilAnalyzer = () => {
                 onChange={(e) => handleOcrUpload(e.target.files?.[0] || null)}
               />
               <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-              <p className="text-sm text-gray-700">Drag & drop your PDF here, or</p>
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-2 px-3 py-1.5 bg-[var(--ag-primary-600)] text-white rounded-md text-sm hover:bg-[var(--ag-primary-700)] disabled:opacity-50 shadow" disabled={ocrLoading}>Browse PDF</button>
-              <p className="text-xs text-gray-500 mt-2">PDF only, up to 10MB</p>
+              <p className="text-sm text-gray-700">{t.dragHere}</p>
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-2 px-3 py-1.5 bg-[var(--ag-primary-600)] text-white rounded-md text-sm hover:bg-[var(--ag-primary-700)] disabled:opacity-50 shadow" disabled={ocrLoading}>{t.browse}</button>
+              <p className="text-xs text-gray-500 mt-2">{t.pdfOnly}</p>
               {ocrLoading && (
                 <div className="mt-3">
                   <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
                     <div className="h-2 bg-[var(--ag-primary-500)]" style={{ width: `${uploadProgress}%` }} />
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Uploading... {uploadProgress}%</p>
+                  <p className="text-xs text-gray-600 mt-1">{t.uploading} {uploadProgress}%</p>
                 </div>
               )}
             </div>
@@ -389,7 +435,7 @@ const SoilAnalyzer = () => {
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-2">
                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-100 text-green-700">✔</span>
-                <h4 className="text-md font-medium text-gray-900">PDF Summary</h4>
+                <h4 className="text-md font-medium text-gray-900">{t.pdfSummary}</h4>
               </div>
               <ul className="p-4 bg-gray-50 border border-[var(--ag-border)] rounded-lg text-sm text-gray-800 space-y-2">
                 {ocrSummary.split('\n').filter(Boolean).map((line, idx) => {
@@ -398,7 +444,7 @@ const SoilAnalyzer = () => {
                 })}
               </ul>
               <details className="mt-2">
-                <summary className="text-xs text-gray-600 cursor-pointer">Show extracted text</summary>
+                <summary className="text-xs text-gray-600 cursor-pointer">{t.showText}</summary>
                 <div className="mt-2 p-3 bg-white border border-[var(--ag-border)] rounded text-xs text-gray-700 whitespace-pre-wrap max-h-64 overflow-auto">{ocrText}</div>
               </details>
             </div>

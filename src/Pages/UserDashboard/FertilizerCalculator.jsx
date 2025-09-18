@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 
@@ -15,8 +15,75 @@ const FertilizerCalculator = () => {
   const [dosage, setDosage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
+  });
+
+  const t = {
+    en: {
+      title: 'Fertilizer Calculator',
+      subtitle: 'Calculate precise fertilizer requirements based on your soil conditions and crop needs.',
+      formTitle: 'Farm Details',
+      area: 'Land Area (acres) *',
+      areaPh: 'e.g., 2.5',
+      cropType: 'Crop Type *',
+      selectCrop: 'Select crop',
+      soilType: 'Soil Type',
+      selectSoil: 'Select soil type',
+      pH: 'Soil pH',
+      pHPh: 'e.g., 6.5',
+      nitrogen: 'Nitrogen (mg/kg)',
+      nitrogenPh: 'e.g., 40',
+      phosphorus: 'Phosphorus (mg/kg)',
+      phosphorusPh: 'e.g., 35',
+      potassium: 'Potassium (mg/kg)',
+      potassiumPh: 'e.g., 50',
+      optAnalysis: 'Soil Analysis (Optional)',
+      calcBtnLoading: 'Calculating...',
+      calcBtn: 'Calculate Fertilizer Requirements',
+      recTitle: 'Fertilizer Recommendations',
+      recDosage: 'Recommended Dosage',
+      applyNote: (crop, area, amt) => `Apply approximately ${amt} kg of fertilizer for ${crop} on ${area} acres.`,
+      breakdown: 'Fertilizer Breakdown:',
+      addlNotes: 'Additional Notes:',
+      emptyHint: 'Enter your farm details to get personalized fertilizer recommendations'
+    },
+    ml: {
+      title: 'വള കാൽക്കുലേറ്റർ',
+      subtitle: 'മണ്ണിന്റെയും വിളയുടെയും ആവശ്യകതകളെ അടിസ്ഥാനമാക്കി കൃത്യമായ വളപരിമാണം കണക്കാക്കുക.',
+      formTitle: 'ഫാം വിശദാംശങ്ങൾ',
+      area: 'ഭൂവിസ്തീർണ്ണം (ഏക്കർ) *',
+      areaPh: 'ഉദാ., 2.5',
+      cropType: 'വിള തരം *',
+      selectCrop: 'വിള തിരഞ്ഞെടുക്കുക',
+      soilType: 'മണ്ണിന്റെ തരം',
+      selectSoil: 'മണ്ണിന്റെ തരം തിരഞ്ഞെടുക്കുക',
+      pH: 'മണ്ണിന്റെ pH',
+      pHPh: 'ഉദാ., 6.5',
+      nitrogen: 'നൈട്രജൻ (mg/kg)',
+      nitrogenPh: 'ഉദാ., 40',
+      phosphorus: 'ഫോസ്ഫറസ് (mg/kg)',
+      phosphorusPh: 'ഉദാ., 35',
+      potassium: 'പൊട്ടാസ്യം (mg/kg)',
+      potassiumPh: 'ഉദാ., 50',
+      optAnalysis: 'മണ്ണ് വിശകലനം (ഐച്ഛികം)',
+      calcBtnLoading: 'കണക്കാക്കുന്നു...',
+      calcBtn: 'വള ആവശ്യം കണക്കാക്കുക',
+      recTitle: 'വള ശുപാർശകൾ',
+      recDosage: 'ശുപാർശ ചെയ്‌ത ഡോസ്',
+      applyNote: (crop, area, amt) => `ഏകദേശം ${amt} കിലോ വളം ${area} ഏക്കറിൽ ${crop} കൃഷിക്ക് ഉപയോഗിക്കുക.`,
+      breakdown: 'വള വിഭജനം:',
+      addlNotes: 'കൂടുതൽ കുറിപ്പുകൾ:',
+      emptyHint: 'വ്യക്തിഗത ശുപാർശകൾക്കായി നിങ്ങളുടെ ഫാം വിശദാംശങ്ങൾ നൽകുക'
+    }
+  }[lang];
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const h = (e) => setLang(e?.detail || 'en');
+    window.addEventListener('langChanged', h);
+    return () => window.removeEventListener('langChanged', h);
+  }, []);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,8 +128,8 @@ const FertilizerCalculator = () => {
         <div className="ag-hero-gradient p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Fertilizer Calculator</h2>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">Calculate precise fertilizer requirements based on your soil conditions and crop needs.</p>
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">{t.title}</h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
             </div>
           </div>
         </div>
@@ -70,7 +137,7 @@ const FertilizerCalculator = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <motion.form onSubmit={handleSubmit} className="ag-card p-6 space-y-4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h3 className="text-lg font-semibold text-gray-900">Farm Details</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t.formTitle}</h3>
           
           {error && (
             <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
@@ -80,7 +147,7 @@ const FertilizerCalculator = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Land Area (acres) *</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.area}</label>
               <input 
                 name="area" 
                 type="number" 
@@ -89,11 +156,11 @@ const FertilizerCalculator = () => {
                 onChange={handleChange} 
                 className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
                 required 
-                placeholder="e.g., 2.5"
+                placeholder={t.areaPh}
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">Crop Type *</label>
+              <label className="block text-sm text-gray-700 mb-1">{t.cropType}</label>
               <select 
                 name="crop" 
                 value={form.crop} 
@@ -101,7 +168,7 @@ const FertilizerCalculator = () => {
                 className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
                 required
               >
-                <option value="">Select crop</option>
+                <option value="">{t.selectCrop}</option>
                 <option value="wheat">Wheat</option>
                 <option value="rice">Rice</option>
                 <option value="maize">Maize</option>
@@ -116,14 +183,14 @@ const FertilizerCalculator = () => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-700 mb-1">Soil Type</label>
+            <label className="block text-sm text-gray-700 mb-1">{t.soilType}</label>
             <select 
               name="soilType" 
               value={form.soilType} 
               onChange={handleChange} 
               className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
             >
-              <option value="">Select soil type</option>
+              <option value="">{t.selectSoil}</option>
               <option value="clay">Clay</option>
               <option value="sandy">Sandy</option>
               <option value="loamy">Loamy</option>
@@ -132,10 +199,10 @@ const FertilizerCalculator = () => {
           </div>
 
           <div className="border-t pt-4">
-            <h4 className="text-md font-medium text-gray-900 mb-3">Soil Analysis (Optional)</h4>
+            <h4 className="text-md font-medium text-gray-900 mb-3">{t.optAnalysis}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Soil pH</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.pH}</label>
                 <input 
                   name="ph" 
                   type="number" 
@@ -145,11 +212,11 @@ const FertilizerCalculator = () => {
                   value={form.ph} 
                   onChange={handleChange} 
                   className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
-                  placeholder="e.g., 6.5"
+                  placeholder={t.pHPh}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Nitrogen (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.nitrogen}</label>
                 <input 
                   name="nitrogen" 
                   type="number" 
@@ -157,11 +224,11 @@ const FertilizerCalculator = () => {
                   value={form.nitrogen} 
                   onChange={handleChange} 
                   className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
-                  placeholder="e.g., 40"
+                  placeholder={t.nitrogenPh}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Phosphorus (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.phosphorus}</label>
                 <input 
                   name="phosphorus" 
                   type="number" 
@@ -169,11 +236,11 @@ const FertilizerCalculator = () => {
                   value={form.phosphorus} 
                   onChange={handleChange} 
                   className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
-                  placeholder="e.g., 35"
+                  placeholder={t.phosphorusPh}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">Potassium (mg/kg)</label>
+                <label className="block text-sm text-gray-700 mb-1">{t.potassium}</label>
                 <input 
                   name="potassium" 
                   type="number" 
@@ -181,7 +248,7 @@ const FertilizerCalculator = () => {
                   value={form.potassium} 
                   onChange={handleChange} 
                   className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
-                  placeholder="e.g., 50"
+                  placeholder={t.potassiumPh}
                 />
               </div>
             </div>
@@ -192,24 +259,22 @@ const FertilizerCalculator = () => {
             disabled={loading}
             className="w-full bg-[var(--ag-primary-500)] text-white py-2 rounded-lg hover:bg-[var(--ag-primary-600)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Calculating...' : 'Calculate Fertilizer Requirements'}
+            {loading ? t.calcBtnLoading : t.calcBtn}
           </button>
         </motion.form>
 
         <motion.div className="ag-card p-6" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Fertilizer Recommendations</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.recTitle}</h3>
           {dosage ? (
             <div className="space-y-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-medium text-green-900 mb-2">Recommended Dosage</h4>
-                <p className="text-green-800">
-                  Apply approximately <span className="font-semibold">{dosage.totalAmount} kg</span> of fertilizer for {form.crop} on {form.area} acres.
-                </p>
+                <h4 className="font-medium text-green-900 mb-2">{t.recDosage}</h4>
+                <p className="text-green-800">{t.applyNote(form.crop, form.area, dosage.totalAmount)}</p>
               </div>
               
               {dosage.breakdown && (
                 <div className="space-y-2">
-                  <h5 className="font-medium text-gray-900">Fertilizer Breakdown:</h5>
+                  <h5 className="font-medium text-gray-900">{t.breakdown}</h5>
                   <ul className="space-y-1 text-sm">
                     {Object.entries(dosage.breakdown).map(([type, amount]) => (
                       <li key={type} className="flex justify-between">
@@ -223,7 +288,7 @@ const FertilizerCalculator = () => {
               
               {dosage.notes && (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h5 className="font-medium text-blue-900 mb-1">Additional Notes:</h5>
+                  <h5 className="font-medium text-blue-900 mb-1">{t.addlNotes}</h5>
                   <p className="text-blue-800 text-sm">{dosage.notes}</p>
                 </div>
               )}
@@ -233,7 +298,7 @@ const FertilizerCalculator = () => {
               <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              <p className="text-gray-500 text-sm">Enter your farm details to get personalized fertilizer recommendations</p>
+              <p className="text-gray-500 text-sm">{t.emptyHint}</p>
             </div>
           )}
         </motion.div>
