@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sowing Calendar Component Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Sowing Calendar Component Test</h1>
+        <p>This is a simple test to verify the modal functionality works correctly.</p>
+        
+        <button class="test-button" onclick="openModal()">Add Record (Test Modal)</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Add New Record</h2>
+            
+            <form id="recordForm">
+                <div class="form-group">
+                    <label for="crop">Crop Name *</label>
+                    <input type="text" id="crop" name="crop" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="season">Season *</label>
+                    <select id="season" name="season" required>
+                        <option value="">Select Season</option>
+                        <option value="Kharif">Kharif (Monsoon)</option>
+                        <option value="Rabi">Rabi (Winter)</option>
+                        <option value="Zaid">Zaid (Summer)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="startMonth">Start Month *</label>
+                    <select id="startMonth" name="startMonth" required>
+                        <option value="">Select Start Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="endMonth">End Month *</label>
+                    <select id="endMonth" name="endMonth" required>
+                        <option value="">Select End Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <input type="text" id="region" name="region" placeholder="e.g., Punjab, Kerala, all">
+                </div>
+                
+                <div class="form-group">
+                    <label for="agroZone">Agro Zone</label>
+                    <select id="agroZone" name="agroZone">
+                        <option value="">Select Agro Zone</option>
+                        <option value="humid">Humid</option>
+                        <option value="arid">Arid</option>
+                        <option value="temperate">Temperate</option>
+                        <option value="semi-arid">Semi-arid</option>
+                        <option value="tropical">Tropical</option>
+                        <option value="subtropical">Subtropical</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="source">Source</label>
+                    <input type="text" id="source" name="source" placeholder="e.g., ICAR 2024, KVK-XYZ">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            console.log('Opening modal...');
+            document.getElementById('modal').classList.add('show');
+            document.getElementById('status').innerHTML = '<p style="color: green;">Modal opened successfully!</p>';
+        }
+        
+        function closeModal() {
+            console.log('Closing modal...');
+            document.getElementById('modal').classList.remove('show');
+            document.getElementById('status').innerHTML = '<p style="color: blue;">Modal closed.</p>';
+        }
+        
+        document.getElementById('recordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('Form submitted!');
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            console.log('Form data:', data);
+            document.getElementById('status').innerHTML = '<p style="color: green;">Form submitted successfully! Check console for data.</p>';
+            
+            // Close modal after successful submission
+            setTimeout(() => {
+                closeModal();
+            }, 1000);
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Test modal functionality on page load
+        window.addEventListener('load', function() {
+            console.log('Test page loaded successfully');
+            document.getElementById('status').innerHTML = '<p style="color: green;">Test page loaded. Click "Add Record" to test modal.</p>';
+        });
+    </script>
+</body>
+</html>

@@ -6,6 +6,7 @@ import AdminSidebar from '../Components/AdminSidebar';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import UserManagement from '../Components/UserManagement';
 import CropManagement from '../Components/CropManagement';
+import SowingCalendarManagement from '../Components/SowingCalendarManagement';
 
 const SidebarLink = ({ icon, label, active }) => (
   <div className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
@@ -276,6 +277,12 @@ const AdminDashboard = () => {
                 <p className="text-gray-600 mb-6">Create and manage crops with description, cultivation details, and image.</p>
                 <CropManagement />
               </div>
+            </div>
+          )}
+
+          {activeTab === 'sowing-calendar' && (
+            <div className="px-4 sm:px-0">
+              <SowingCalendarManagement />
             </div>
           )}
 

@@ -97,7 +97,7 @@ const SoilAnalyzer = () => {
         setLoading(false);
         return;
       }
-
+      
       const response = await api.post('/farmer/soil-analysis', payload);
       
       if (response.data?.success) {
@@ -220,7 +220,7 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="14"
                 value={form.ph} 
-                onChange={handleChange}
+                onChange={handleChange} 
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.ph && errors.ph ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 required 
@@ -237,7 +237,7 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="100"
                 value={form.organicMatter} 
-                onChange={handleChange}
+                onChange={handleChange} 
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.organicMatter && errors.organicMatter ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 placeholder="e.g., 2.5"
@@ -256,7 +256,7 @@ const SoilAnalyzer = () => {
                 min="0" 
                 max="100"
                 value={form.moisture} 
-                onChange={handleChange}
+                onChange={handleChange} 
                 onBlur={handleBlur}
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.moisture && errors.moisture ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                 placeholder="e.g., 25"
@@ -292,7 +292,7 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.nitrogen} 
-                  onChange={handleChange}
+                  onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.nitrogen && errors.nitrogen ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 40"
@@ -306,7 +306,7 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.phosphorus} 
-                  onChange={handleChange}
+                  onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.phosphorus && errors.phosphorus ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 35"
@@ -320,7 +320,7 @@ const SoilAnalyzer = () => {
                   type="number" 
                   step="0.1"
                   value={form.potassium} 
-                  onChange={handleChange}
+                  onChange={handleChange} 
                   onBlur={handleBlur}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${touched.potassium && errors.potassium ? 'border-red-300 focus:ring-red-400' : 'border-[var(--ag-border)] focus:ring-[var(--ag-primary-500)]'}`} 
                   placeholder="e.g., 50"

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud } from 'lucide-react';
+import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud, Calendar } from 'lucide-react';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import authService from '../services/authService';
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/dashboard/fertilizer', label: 'Fertilizer Calculator', icon: Calculator },
   { to: '/dashboard/crop-profiles', label: 'Crop Profiles', icon: BarChart3 },
   { to: '/dashboard/weather-forecast', label: 'Weather Forecast', icon: Cloud },
+  { to: '/dashboard/sowing-calendar', label: 'Sowing Calendar', icon: Calendar },
   { to: '/dashboard/chat', label: 'Chatbox', icon: MessageSquare },
   { to: '/dashboard/reports', label: 'Reports', icon: FileText },
 ];
@@ -23,7 +24,6 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-
 
 
   useEffect(() => {
@@ -94,7 +94,7 @@ const Dashboard = () => {
                   <div className="w-6 h-6 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
                     {user?.avatarUrl ? (
                       <img 
-                        src={user.avatarUrl} 
+                        src={(user.avatarUrl && (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${window.location.origin}${user.avatarUrl}`)) || ''} 
                         alt="avatar" 
                         className="w-full h-full object-cover" 
                       />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './Pages/landing';
-import Login from './Pages/Login';
+import Login from './Pages/login';
 import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
 import Home from './Pages/UserDashboard/Home';
@@ -10,6 +10,7 @@ import SoilAnalyzer from './Pages/UserDashboard/SoilAnalyzer';
 import FertilizerCalculator from './Pages/UserDashboard/FertilizerCalculator';
 import CropProfiles from './Pages/UserDashboard/CropProfiles';
 import WeatherForecast from './Pages/UserDashboard/WeatherForecast';
+import SowingCalendar from './Pages/UserDashboard/SowingCalendar';
 import Chatbox from './Pages/UserDashboard/Chatbox';
 import Reports from './Pages/UserDashboard/Reports';
 import AdminDashboard from './Pages/AdminDashboard';
@@ -171,6 +172,7 @@ function App() {
             <Route path="fertilizer" element={<FertilizerCalculator />} />
             <Route path="crop-profiles" element={<CropProfiles />} />
             <Route path="weather-forecast" element={<WeatherForecast />} />
+            <Route path="sowing-calendar" element={<SowingCalendar />} />
             <Route path="chat" element={<Chatbox />} />
             <Route path="reports" element={<Reports />} />
           </Route>

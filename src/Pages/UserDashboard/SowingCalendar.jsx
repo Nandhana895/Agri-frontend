@@ -1,0 +1,564 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Search, Download, Plus, Globe, Clock, CheckCircle, AlertCircle, XCircle, MapPin, Leaf, Info } from 'lucide-react';
+import api from '../../services/api';
+
+const SowingCalendar = () => {
+  const [searchForm, setSearchForm] = useState({
+    crop: '',
+    region: '',
+    season: ''
+  });
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [cropOptions, setCropOptions] = useState([]);
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [language, setLanguage] = useState('en');
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+
+  // Localization data
+  const translations = {
+    en: {
+      title: 'Sowing Calendar',
+      subtitle: 'Find the perfect time to sow your crops',
+      cropLabel: 'Select Crop',
+      regionLabel: 'Region',
+      seasonLabel: 'Season (Optional)',
+      searchButton: 'Search Calendar',
+      noResults: 'No sowing calendar found for this crop in your region',
+      contactMessage: 'Please contact local agri-office for assistance',
+      ideal: 'Ideal',
+      possible: 'Possible',
+      notRecommended: 'Not recommended',
+      early: 'early',
+      late: 'late',
+      onTime: 'On Time',
+      earlyStatus: 'Early',
+      lateStatus: 'Late',
+      addToLogbook: 'Add to Farm Logbook',
+      exportPDF: 'Export to PDF',
+      language: 'Language',
+      months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      seasons: {
+        Kharif: 'Kharif (Monsoon)',
+        Rabi: 'Rabi (Winter)',
+        Zaid: 'Zaid (Summer)'
+      }
+    },
+    hi: {
+      title: 'बुवाई कैलेंडर',
+      subtitle: 'अपनी फसलों के लिए सही समय खोजें',
+      cropLabel: 'फसल चुनें',
+      regionLabel: 'क्षेत्र',
+      seasonLabel: 'मौसम (वैकल्पिक)',
+      searchButton: 'कैलेंडर खोजें',
+      noResults: 'आपके क्षेत्र में इस फसल के लिए कोई बुवाई कैलेंडर नहीं मिला',
+      contactMessage: 'कृपया सहायता के लिए स्थानीय कृषि कार्यालय से संपर्क करें',
+      ideal: 'आदर्श',
+      possible: 'संभव',
+      notRecommended: 'अनुशंसित नहीं',
+      early: 'जल्दी',
+      late: 'देर',
+      onTime: 'सही समय',
+      earlyStatus: 'जल्दी',
+      lateStatus: 'देर',
+      addToLogbook: 'फार्म लॉगबुक में जोड़ें',
+      exportPDF: 'PDF में निर्यात करें',
+      language: 'भाषा',
+      months: ['जन', 'फर', 'मार', 'अप्र', 'मई', 'जून', 'जुल', 'अग', 'सित', 'अक्ट', 'नव', 'दिस'],
+      seasons: {
+        Kharif: 'खरीफ (मानसून)',
+        Rabi: 'रबी (सर्दी)',
+        Zaid: 'जायद (गर्मी)'
+      }
+    }
+  };
+
+  const t = translations[language];
+
+  // Load crop options on component mount
+  useEffect(() => {
+    loadCropOptions();
+  }, []);
+
+  const loadCropOptions = async () => {
+    try {
+      // Try to get crops from sowing calendar endpoint
+      const response = await api.get('/farmer/sowing-calendar?list=true');
+      if (response.data?.crops) {
+        setCropOptions(response.data.crops);
+      } else {
+        // Fallback to hardcoded common crops
+        setCropOptions([
+          'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane', 'Mustard', 
+          'Chickpea', 'Soybean', 'Groundnut', 'Sunflower', 'Potato', 'Tomato'
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to load crop options:', error);
+      // Fallback to hardcoded crops
+      setCropOptions([
+        'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane', 'Mustard', 
+        'Chickpea', 'Soybean', 'Groundnut', 'Sunflower', 'Potato', 'Tomato'
+      ]);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchForm.crop) return;
+
+    setLoading(true);
+    setError('');
+    setResults([]);
+
+    try {
+      const params = new URLSearchParams({ crop: searchForm.crop });
+      if (searchForm.region) params.append('region', searchForm.region);
+      if (searchForm.season) params.append('season', searchForm.season);
+
+      const response = await api.get(`/farmer/sowing-calendar?${params}`);
+      
+      if (response.data?.results?.length > 0) {
+        setResults(response.data.results);
+        setSelectedResult(response.data.results[0]);
+      } else {
+        setError(t.noResults);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch sowing calendar');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMonthIndex = (monthName) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return months.indexOf(monthName) + 1;
+  };
+
+  const getTimelineData = (result) => {
+    if (!result) return [];
+
+    const startIndex = getMonthIndex(result.startMonth);
+    const endIndex = getMonthIndex(result.endMonth);
+    
+    const timeline = [];
+    
+    for (let month = 1; month <= 12; month++) {
+      let status = 'not-recommended';
+      let tooltip = t.notRecommended;
+      
+      if (startIndex <= endIndex) {
+        // Normal case: start to end
+        if (month >= startIndex && month <= endIndex) {
+          status = 'ideal';
+          tooltip = t.ideal;
+        } else if (month === startIndex - 1 || month === endIndex + 1) {
+          status = 'possible';
+          tooltip = month === startIndex - 1 ? `${t.possible} (${t.early})` : `${t.possible} (${t.late})`;
+        }
+      } else {
+        // Wrap-around case: start to 12, then 1 to end
+        if (month >= startIndex || month <= endIndex) {
+          status = 'ideal';
+          tooltip = t.ideal;
+        } else if (month === startIndex - 1 || month === endIndex + 1) {
+          status = 'possible';
+          tooltip = month === startIndex - 1 ? `${t.possible} (${t.early})` : `${t.possible} (${t.late})`;
+        }
+      }
+      
+      timeline.push({
+        month,
+        monthName: t.months[month - 1],
+        status,
+        tooltip
+      });
+    }
+    
+    return timeline;
+  };
+
+  const getCurrentStatus = (result) => {
+    if (!result) return { status: 'unknown', message: '' };
+    
+    const timeline = getTimelineData(result);
+    const currentMonthData = timeline.find(m => m.month === currentMonth);
+    
+    if (currentMonthData?.status === 'ideal') {
+      return { status: 'on-time', message: t.onTime };
+    } else if (currentMonthData?.status === 'possible') {
+      const startIndex = getMonthIndex(result.startMonth);
+      const isEarly = currentMonth === startIndex - 1;
+      return { 
+        status: isEarly ? 'early' : 'late', 
+        message: isEarly ? t.earlyStatus : t.lateStatus 
+      };
+    } else {
+      return { status: 'late', message: t.lateStatus };
+    }
+  };
+
+  const handleAddToLogbook = async (result) => {
+    try {
+      const logData = {
+        type: 'sowing_plan',
+        crop: result.crop,
+        region: result.region,
+        season: result.season,
+        startMonth: result.startMonth,
+        endMonth: result.endMonth,
+        notes: `Sowing calendar for ${result.crop} - ${result.startMonth} to ${result.endMonth}`,
+        date: new Date().toISOString()
+      };
+      
+      await api.post('/farmer/log', logData);
+      alert('Sowing plan added to Farm Logbook successfully!');
+    } catch (error) {
+      console.error('Failed to add to logbook:', error);
+      alert('Failed to add to logbook. Please try again.');
+    }
+  };
+
+  const handleExportPDF = async (result) => {
+    try {
+      const reportData = {
+        type: 'sowing_calendar',
+        data: {
+          crop: result.crop,
+          region: result.region,
+          season: result.season,
+          startMonth: result.startMonth,
+          endMonth: result.endMonth,
+          varieties: result.varieties,
+          notes: result.notes,
+          source: result.source,
+          lastUpdated: result.lastUpdated
+        }
+      };
+      
+      const response = await api.post('/farmer/reports/generate', reportData);
+      if (response.data?.success) {
+        // In a real implementation, this would download the PDF
+        alert('PDF report generated successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      alert('Failed to export PDF. Please try again.');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="ag-card overflow-hidden relative"
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full opacity-20 ag-cta-gradient blur-3xl" />
+        <div className="ag-hero-gradient p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <Calendar className="w-8 h-8 text-[var(--ag-primary-600)]" />
+                {t.title}
+              </h2>
+              <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] bg-white"
+              >
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Search Form */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.1 }}
+        className="ag-card p-6"
+      >
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Leaf className="w-4 h-4 inline mr-2" />
+                {t.cropLabel} *
+              </label>
+              <select
+                value={searchForm.crop}
+                onChange={(e) => setSearchForm({ ...searchForm, crop: e.target.value })}
+                className="w-full px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
+                required
+              >
+                <option value="">{t.cropLabel}</option>
+                {cropOptions.map((crop) => (
+                  <option key={crop} value={crop}>{crop}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <MapPin className="w-4 h-4 inline mr-2" />
+                {t.regionLabel}
+              </label>
+              <input
+                type="text"
+                value={searchForm.region}
+                onChange={(e) => setSearchForm({ ...searchForm, region: e.target.value })}
+                className="w-full px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
+                placeholder="e.g., Punjab, Kerala"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Clock className="w-4 h-4 inline mr-2" />
+                {t.seasonLabel}
+              </label>
+              <select
+                value={searchForm.season}
+                onChange={(e) => setSearchForm({ ...searchForm, season: e.target.value })}
+                className="w-full px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]"
+              >
+                <option value="">All Seasons</option>
+                <option value="Kharif">{t.seasons.Kharif}</option>
+                <option value="Rabi">{t.seasons.Rabi}</option>
+                <option value="Zaid">{t.seasons.Zaid}</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !searchForm.crop}
+            className="w-full md:w-auto bg-[var(--ag-primary-600)] text-white px-6 py-2 rounded-lg hover:bg-[var(--ag-primary-700)] disabled:opacity-50 disabled:cursor-not-allowed shadow flex items-center justify-center gap-2"
+          >
+            <Search className="w-4 h-4" />
+            {loading ? 'Searching...' : t.searchButton}
+          </button>
+        </form>
+      </motion.div>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="ag-card p-4 bg-red-50 border border-red-200"
+          >
+            <div className="flex items-center gap-3">
+              <XCircle className="w-5 h-5 text-red-600" />
+              <div>
+                <p className="text-red-800 font-medium">{error}</p>
+                <p className="text-red-600 text-sm mt-1">{t.contactMessage}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Results */}
+      <AnimatePresence>
+        {results.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            {/* Result Cards */}
+            <div className="grid gap-4">
+              {results.map((result, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`ag-card p-6 cursor-pointer transition-all duration-200 ${
+                    selectedResult === result 
+                      ? 'ring-2 ring-[var(--ag-primary-500)] bg-[var(--ag-primary-50)]' 
+                      : 'hover:shadow-lg'
+                  }`}
+                  onClick={() => setSelectedResult(result)}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold text-gray-900">{result.crop}</h3>
+                        <span className="px-3 py-1 bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] rounded-full text-sm font-medium">
+                          {result.season}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          <span>{result.region}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{result.startMonth} - {result.endMonth}</span>
+                        </div>
+                        {result.agroZone && (
+                          <div className="flex items-center gap-2">
+                            <Globe className="w-4 h-4" />
+                            <span>{result.agroZone}</span>
+                          </div>
+                        )}
+                        {result.source && (
+                          <div className="flex items-center gap-2">
+                            <Info className="w-4 h-4" />
+                            <span>{result.source}</span>
+                          </div>
+                        )}
+                      </div>
+                      {result.notes && (
+                        <p className="text-sm text-gray-600 mt-2">{result.notes}</p>
+                      )}
+                      {result.varieties && result.varieties.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Varieties:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {result.varieties.map((variety, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                                {variety}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToLogbook(result);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {t.addToLogbook}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExportPDF(result);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        {t.exportPDF}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Timeline Visualization */}
+            {selectedResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="ag-card p-6"
+              >
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Sowing Timeline for {selectedResult.crop}
+                  </h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span>Ideal sowing period</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600" />
+                      <span>Possible (early/late)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-red-600" />
+                      <span>Not recommended</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timeline */}
+                <div className="grid grid-cols-12 gap-2 mb-4">
+                  {getTimelineData(selectedResult).map((month, index) => (
+                    <div
+                      key={index}
+                      className={`relative group`}
+                    >
+                      <div
+                        className={`h-12 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                          month.status === 'ideal'
+                            ? 'bg-green-500 text-white'
+                            : month.status === 'possible'
+                            ? 'bg-yellow-500 text-white'
+                            : 'bg-red-500 text-white'
+                        } ${
+                          month.month === currentMonth ? 'ring-2 ring-blue-400 shadow-lg' : ''
+                        }`}
+                        title={month.tooltip}
+                      >
+                        {month.monthName}
+                      </div>
+                      {month.month === currentMonth && (
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+                          Current
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Status Message */}
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {(() => {
+                      const status = getCurrentStatus(selectedResult);
+                      const Icon = status.status === 'on-time' ? CheckCircle : 
+                                   status.status === 'early' ? AlertCircle : XCircle;
+                      const color = status.status === 'on-time' ? 'text-green-600' : 
+                                   status.status === 'early' ? 'text-yellow-600' : 'text-red-600';
+                      return <Icon className={`w-5 h-5 ${color}`} />;
+                    })()}
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Current Status: {getCurrentStatus(selectedResult).message}
+                      </p>
+                      {getCurrentStatus(selectedResult).status === 'late' && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          Your sowing window has closed. Consult local KVK for late-sowing advisories.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default SowingCalendar;

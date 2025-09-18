@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { profileApi } from '../services/api';
+import config from '../config/config';
 import authService from '../services/authService';
 
 const ManageProfileModal = ({ isOpen, onClose, user }) => {
@@ -199,7 +200,7 @@ const ManageProfileModal = ({ isOpen, onClose, user }) => {
         const me = await profileApi.me();
         if (me?.success) {
           try { 
-            localStorage.setItem('agrisense_user', JSON.stringify(me.user)); 
+            localStorage.setItem(config.USER_KEY, JSON.stringify(me.user)); 
             // Update the user in the parent component
             window.dispatchEvent(new CustomEvent('userUpdated', { detail: me.user }));
           } catch (_) {}
@@ -238,7 +239,7 @@ const ManageProfileModal = ({ isOpen, onClose, user }) => {
             <div className="w-16 h-16 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
               {user?.avatarUrl ? (
                 <img 
-                  src={user.avatarUrl} 
+                  src={(() => { const u = user.avatarUrl || ''; return u.startsWith('http') ? u : `${new URL(config.API_URL).origin}${u}`; })()} 
                   alt="avatar" 
                   className="w-full h-full object-cover" 
                 />

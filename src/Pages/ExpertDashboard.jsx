@@ -4,6 +4,7 @@ import { getSocket } from '../services/socket';
 import { chatApi } from '../services/api';
 import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
+import SowingTrendsDashboard from '../Components/SowingTrendsDashboard';
 
 const StatCard = ({ title, value }) => (
   <div className="ag-card p-4">
@@ -304,6 +305,9 @@ const ExpertDashboard = () => {
             <span className="absolute -right-2 -top-2 inline-flex items-center justify-center text-[10px] h-4 min-w-4 px-1 rounded-full bg-green-600 text-white">{pendingRequests.length}</span>
           )}
         </button>
+        <button onClick={() => setActiveTab('trends')} className={`px-3 py-2 rounded-lg text-sm relative ${activeTab === 'trends' ? 'bg-[var(--ag-primary-500)] text-white' : 'bg-[var(--ag-muted)]'}`}>
+          Sowing Trends
+        </button>
       </div>
 
       {/* Overview Content */}
@@ -455,6 +459,11 @@ const ExpertDashboard = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Trends Content */}
+      {activeTab === 'trends' && (
+        <SowingTrendsDashboard />
       )}
     </div>
   );
