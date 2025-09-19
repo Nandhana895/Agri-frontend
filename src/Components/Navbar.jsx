@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import authService from '../services/authService';
 
 const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [locationLabel, setLocationLabel] = useState('');
   
   const currentUser = authService.getCurrentUser();
 
@@ -12,6 +13,48 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
     onLogout();
     setIsProfileDropdownOpen(false);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    async function reverseGeocode(lat, lon) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        const a = data.address || {};
+        const city = a.city || a.town || a.village || a.hamlet || a.county;
+        const state = a.state || a.region;
+        const label = city && state ? `${city}, ${state}` : (data.display_name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+        if (!cancelled) setLocationLabel(label);
+      } catch (_) {
+        if (!cancelled) setLocationLabel('Location unavailable');
+      }
+    }
+    async function loadLocation() {
+      if (!isAuthenticated) {
+        setLocationLabel('');
+        return;
+      }
+      if (!('geolocation' in navigator)) {
+        setLocationLabel('Location unavailable');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords || {};
+          if (typeof latitude === 'number' && typeof longitude === 'number') {
+            reverseGeocode(latitude, longitude);
+          } else {
+            setLocationLabel('Location unavailable');
+          }
+        },
+        () => setLocationLabel('Location blocked'),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    }
+    loadLocation();
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
 
   const getInitials = (name) => {
     return name
@@ -41,6 +84,14 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
             <a href="#home" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">Home</a>
             <a href="#features" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">Features</a>
             <a href="#about" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">About</a>
+            {isAuthenticated && locationLabel && (
+              <div className="flex items-center text-gray-600 gap-2">
+                <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6zm0 8.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+                </svg>
+                <span className="text-sm truncate max-w-[14rem]" title={locationLabel}>{locationLabel}</span>
+              </div>
+            )}
             
             {!isAuthenticated ? (
               // Show Login/Signup when not authenticated
@@ -154,6 +205,14 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
               ) : (
                 // Show User Profile when authenticated
                 <div className="px-4 py-2 space-y-2">
+                  {locationLabel && (
+                    <div className="flex items-center gap-2 px-4 py-2 text-gray-600">
+                      <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6zm0 8.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+                      </svg>
+                      <span className="text-sm truncate" title={locationLabel}>{locationLabel}</span>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-3 px-4 py-2">
                     <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                       {getInitials(currentUser?.name || 'U')}

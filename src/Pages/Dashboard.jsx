@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [locationLabel, setLocationLabel] = useState('');
   const [lang, setLang] = useState(() => {
     try {
       return localStorage.getItem('ag_lang') || 'en';
@@ -46,6 +47,45 @@ const Dashboard = () => {
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
+  }, []);
+
+  // Resolve and display user location in the topbar
+  useEffect(() => {
+    let cancelled = false;
+    async function reverseGeocode(lat, lon) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        const a = data.address || {};
+        const city = a.city || a.town || a.village || a.hamlet || a.county;
+        const state = a.state || a.region;
+        const label = city && state ? `${city}, ${state}` : (data.display_name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+        if (!cancelled) setLocationLabel(label);
+      } catch (_) {
+        if (!cancelled) setLocationLabel('Location unavailable');
+      }
+    }
+    function loadLocation() {
+      if (!('geolocation' in navigator)) {
+        setLocationLabel('');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords || {};
+          if (typeof latitude === 'number' && typeof longitude === 'number') {
+            reverseGeocode(latitude, longitude);
+          } else {
+            setLocationLabel('');
+          }
+        },
+        () => setLocationLabel(''),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    }
+    loadLocation();
+    return () => { cancelled = true; };
   }, []);
 
   // When language changes here, persist and broadcast so inner pages can react
@@ -109,6 +149,14 @@ const Dashboard = () => {
                 <option value="en">English</option>
                 <option value="ml">Malayalam</option>
               </select>
+              {locationLabel && (
+                <div className="hidden sm:flex items-center gap-2 px-2 text-gray-600">
+                  <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C8.686 2 6 4.686 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.314-2.686-6-6-6zm0 8.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+                  </svg>
+                  <span className="text-sm truncate max-w-[16rem]" title={locationLabel}>{locationLabel}</span>
+                </div>
+              )}
               <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)]">
                 <Bell className="w-5 h-5 text-gray-700" />
               </button>

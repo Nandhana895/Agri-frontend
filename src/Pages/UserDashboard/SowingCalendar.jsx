@@ -86,6 +86,16 @@ const SowingCalendar = () => {
     loadCropOptions();
   }, []);
 
+  // Listen for language changes from Navbar
+  useEffect(() => {
+    const onLangChanged = (e) => {
+      const next = e?.detail || (() => { try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }})();
+      setLanguage(next);
+    };
+    try { window.addEventListener('langChanged', onLangChanged); } catch(_) {}
+    return () => { try { window.removeEventListener('langChanged', onLangChanged); } catch(_) {} };
+  }, []);
+
   const loadCropOptions = async () => {
     try {
       // Try to get crops from sowing calendar endpoint
@@ -274,20 +284,7 @@ const SowingCalendar = () => {
               </h2>
               <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <select
-                value={language}
-                onChange={(e) => {
-                  setLanguage(e.target.value);
-                  try { localStorage.setItem('ag_lang', e.target.value); } catch(_) {}
-                  try { window.dispatchEvent(new CustomEvent('langChanged', { detail: e.target.value })); } catch(_) {}
-                }}
-                className="px-3 py-2 border border-[var(--ag-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] bg-white"
-              >
-                <option value="en">English</option>
-                <option value="ml">Malayalam</option>
-              </select>
-            </div>
+            {/* Language control moved to Navbar; listening via 'langChanged' event */}
           </div>
         </div>
       </motion.div>
@@ -297,10 +294,10 @@ const SowingCalendar = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.1 }}
-        className="ag-card p-6"
+        className="ag-card p-6 sticky top-4 z-30"
       >
         <form onSubmit={handleSearch} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Leaf className="w-4 h-4 inline mr-2" />
