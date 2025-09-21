@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud, Calendar } from 'lucide-react';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import authService from '../services/authService';
+import config from '../config/config';
 
 const navItems = [
   { to: '/dashboard', label: 'Home', icon: HomeIcon },
@@ -100,6 +101,23 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const getProfileImageUrl = (avatarUrl) => {
+    if (!avatarUrl) return null;
+    // If it's already a full URL, return as is
+    if (avatarUrl.startsWith('http')) return avatarUrl;
+    // Otherwise, construct the full URL
+    return `${new URL(config.API_URL).origin}${avatarUrl}`;
+  };
+
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="min-h-screen bg-[var(--ag-muted)] flex">
       {/* Sidebar */}
@@ -131,7 +149,7 @@ const Dashboard = () => {
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Topbar */}
-        <header className="bg-white/80 backdrop-blur border-b border-[var(--ag-border)] sticky top-0 z-40">
+        <header className="bg-white/95 backdrop-blur-md border-b border-[var(--ag-border)] sticky top-0 z-40 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button className="md:hidden p-2" onClick={() => setIsSidebarOpen((v) => !v)}>
@@ -157,41 +175,49 @@ const Dashboard = () => {
                   <span className="text-sm truncate max-w-[16rem]" title={locationLabel}>{locationLabel}</span>
                 </div>
               )}
-              <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)]">
+              <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)]">
                 <Bell className="w-5 h-5 text-gray-700" />
               </button>
               <div className="relative">
-                <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)]">
-                  <div className="w-6 h-6 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
+                <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)]">
+                  <div className="w-8 h-8 rounded-full ag-cta-gradient text-white flex items-center justify-center overflow-hidden">
                     {user?.avatarUrl ? (
                       <img 
-                        src={(user.avatarUrl && (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${window.location.origin}${user.avatarUrl}`)) || ''} 
-                        alt="avatar" 
-                        className="w-full h-full object-cover" 
+                        src={getProfileImageUrl(user.avatarUrl)} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
+                    ) : null}
+                    <div className={`w-full h-full flex items-center justify-center ${user?.avatarUrl ? 'hidden' : 'flex'} ag-cta-gradient`}>
+                      {getInitials(user?.name || 'F')}
+                    </div>
                   </div>
-                  <span>{user?.name || 'Farmer'}</span>
+                  <span className="font-medium">{user?.name || 'Farmer'}</span>
                   <svg className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-[var(--ag-border)]">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 border border-[var(--ag-border)] backdrop-blur-sm">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-10 rounded-full ag-cta-gradient text-white flex items-center justify-center overflow-hidden">
                           {user?.avatarUrl ? (
                             <img 
-                              src={user.avatarUrl} 
-                              alt="avatar" 
-                              className="w-full h-full object-cover" 
+                              src={getProfileImageUrl(user.avatarUrl)} 
+                              alt="Profile" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
                             />
-                          ) : (
-                            <span className="text-sm font-semibold">
-                              {(user?.name || 'U').charAt(0).toUpperCase()}
-                            </span>
-                          )}
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center ${user?.avatarUrl ? 'hidden' : 'flex'} ag-cta-gradient`}>
+                            {getInitials(user?.name || 'U')}
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">{user?.name || 'User'}</div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import authService from '../services/authService';
+import config from '../config/config';
 
-const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
+const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowProfileModal }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [locationLabel, setLocationLabel] = useState('');
@@ -65,8 +66,16 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
       .slice(0, 2);
   };
 
+  const getProfileImageUrl = (avatarUrl) => {
+    if (!avatarUrl) return null;
+    // If it's already a full URL, return as is
+    if (avatarUrl.startsWith('http')) return avatarUrl;
+    // Otherwise, construct the full URL
+    return `${new URL(config.API_URL).origin}${avatarUrl}`;
+  };
+
   return (
-    <nav className="bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-b border-[var(--ag-border)]">
+    <nav className="bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 border-b border-[var(--ag-border)] shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -81,9 +90,10 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">Home</a>
-            <a href="#features" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">Features</a>
-            <a href="#about" className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium">About</a>
+            <a href="#home" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Home</a>
+            <a href="#services" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Solutions</a>
+            <a href="#about" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">About</a>
+            <a href="#contact" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Contact</a>
             {isAuthenticated && locationLabel && (
               <div className="flex items-center text-gray-600 gap-2">
                 <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -96,17 +106,17 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
             {!isAuthenticated ? (
               // Show Login/Signup when not authenticated
               <>
-                {/* <button 
+                <button 
                   onClick={onShowLogin}
-                  className="text-gray-700 hover:text-[var(--ag-primary-600)] font-medium px-4 py-2 rounded-lg border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] transition-colors"
+                  className="text-gray-700 hover:text-green-600 font-medium px-4 py-2 rounded-lg border border-gray-300 hover:border-green-600 transition-colors"
                 >
-                  Login
-                </button> */}
+                  Request Quote
+                </button>
                 <button 
                   onClick={onShowSignup}
-                  className="ag-cta-gradient text-white px-6 py-2 rounded-lg hover:opacity-95 transition-opacity font-medium shadow-md"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                 >
-                  Sign Up
+                  Get Started
                 </button>
               </>
             ) : (
@@ -114,11 +124,24 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center space-x-3 text-gray-700 hover:text-green-600 transition-colors focus:outline-none"
+                  className="flex items-center space-x-3 text-gray-700 hover:text-[var(--ag-primary-600)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-200)] focus:ring-opacity-50 rounded-lg px-2 py-1"
                 >
                   {/* Profile Picture */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ag-cta-gradient">
-                    {getInitials(currentUser?.name || 'U')}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ag-cta-gradient overflow-hidden">
+                    {currentUser?.avatarUrl ? (
+                      <img 
+                        src={getProfileImageUrl(currentUser.avatarUrl)} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-full h-full flex items-center justify-center ${currentUser?.avatarUrl ? 'hidden' : 'flex'} ag-cta-gradient`}>
+                      {getInitials(currentUser?.name || 'U')}
+                    </div>
                   </div>
                   {/* Username */}
                   <span className="font-medium">{currentUser?.name || 'User'}</span>
@@ -135,11 +158,13 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
 
                 {/* Profile Dropdown */}
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-gray-200 backdrop-blur-sm">
                     <button
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
-                        // Navigate to manage account (you can implement this later)
+                        if (onShowProfileModal) {
+                          onShowProfileModal();
+                        }
                       }}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] transition-colors"
                     >
@@ -147,7 +172,7 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        <span>Manage Account</span>
+                        <span>Manage Profile</span>
                       </div>
                     </button>
                     <button
@@ -183,8 +208,9 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
           <div className="md:hidden py-4 border-t border-gray-100">
             <div className="space-y-2">
               <a href="#home" className="block px-4 py-2 text-gray-700 hover:text-green-600">Home</a>
-              <a href="#features" className="block px-4 py-2 text-gray-700 hover:text-green-600">Features</a>
+              <a href="#services" className="block px-4 py-2 text-gray-700 hover:text-green-600">Solutions</a>
               <a href="#about" className="block px-4 py-2 text-gray-700 hover:text-green-600">About</a>
+              <a href="#contact" className="block px-4 py-2 text-gray-700 hover:text-green-600">Contact</a>
               
               {!isAuthenticated ? (
                 // Show Login/Signup when not authenticated
@@ -193,13 +219,13 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
                     onClick={onShowLogin}
                     className="w-full text-gray-700 hover:text-green-600 font-medium px-4 py-2 rounded-lg border border-gray-300 hover:border-green-600 transition-colors"
                   >
-                    Login
+                    Request Quote
                   </button>
                   <button 
                     onClick={onShowSignup}
                     className="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
                   >
-                    Sign Up
+                    Get Started
                   </button>
                 </div>
               ) : (
@@ -214,19 +240,34 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
                     </div>
                   )}
                   <div className="flex items-center space-x-3 px-4 py-2">
-                    <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      {getInitials(currentUser?.name || 'U')}
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ag-cta-gradient overflow-hidden">
+                      {currentUser?.avatarUrl ? (
+                        <img 
+                          src={getProfileImageUrl(currentUser.avatarUrl)} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center ${currentUser?.avatarUrl ? 'hidden' : 'flex'} ag-cta-gradient`}>
+                        {getInitials(currentUser?.name || 'U')}
+                      </div>
                     </div>
                     <span className="font-medium text-gray-700">{currentUser?.name || 'User'}</span>
                   </div>
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
-                      // Navigate to manage account (you can implement this later)
+                      if (onShowProfileModal) {
+                        onShowProfileModal();
+                      }
                     }}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors rounded-lg"
                   >
-                    Manage Account
+                    Manage Profile
                   </button>
                   <button
                     onClick={() => {

@@ -33,14 +33,14 @@ const Kpi = ({ label, value, delta, positive }) => (
 );
 
 const QuickAction = ({ to, icon, label }) => (
-  <Link to={to} className="group ag-card p-4 hover:shadow-lg transition-shadow">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-lg ag-cta-gradient text-white flex items-center justify-center">
+  <Link to={to} className="group ag-card p-5 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+    <div className="flex items-center gap-4">
+      <div className="w-12 h-12 rounded-xl ag-cta-gradient text-white flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow duration-200">
         {icon}
       </div>
       <div>
-        <p className="text-sm font-semibold text-gray-900 group-hover:text-[var(--ag-primary-600)]">{label}</p>
-        <p className="text-xs text-gray-500">Open</p>
+        <p className="text-sm font-semibold text-gray-900 group-hover:text-[var(--ag-primary-600)] transition-colors duration-200">{label}</p>
+        <p className="text-xs text-gray-500">Click to open</p>
       </div>
     </div>
   </Link>
@@ -119,13 +119,13 @@ const Home = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Hero */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="ag-card overflow-hidden relative"
+        className="ag-card overflow-hidden relative shadow-lg"
       >
         <div className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full opacity-20 ag-cta-gradient blur-3xl" />
         <div className="pointer-events-none absolute -left-12 -bottom-20 w-72 h-72 rounded-full opacity-10 ag-cta-gradient blur-3xl" />
@@ -135,47 +135,67 @@ const Home = () => {
               <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900">Welcome back, {firstName} 🌿</h2>
               <p className="text-gray-600 mt-1 text-sm md:text-base">Monitor your farm's performance and get intelligent insights to optimize your agricultural practices.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link to="/dashboard/reports" className="ag-cta-gradient text-white px-4 py-2 rounded-lg text-sm shadow hover:opacity-95 self-start md:self-auto">View Reports</Link>
-              <Link to="/dashboard/chat" className="text-[var(--ag-primary-600)] px-4 py-2 rounded-lg text-sm border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] bg-white/60 backdrop-blur">Ask Expert</Link>
+            <div className="flex items-center gap-3">
+              <Link to="/dashboard/reports" className="ag-cta-gradient text-white px-6 py-3 rounded-lg text-sm font-medium shadow-lg hover:opacity-95 hover:shadow-xl transition-all duration-200 self-start md:self-auto">View Reports</Link>
+              <Link to="/dashboard/chat" className="text-[var(--ag-primary-600)] px-6 py-3 rounded-lg text-sm font-medium border border-[var(--ag-border)] hover:border-[var(--ag-primary-600)] bg-white/80 backdrop-blur hover:bg-white transition-all duration-200">Ask Expert</Link>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* KPIs */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <div className="ag-card p-5">
+      <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="ag-card p-6 hover:shadow-lg transition-shadow duration-200"
+        >
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-wide text-gray-500">Active Fields</p>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--ag-field-200)] text-[var(--ag-primary-600)]">Live</span>
+            <p className="text-xs tracking-wide text-gray-500 font-medium">Active Fields</p>
+            <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--ag-field-200)] text-[var(--ag-primary-600)] font-semibold">Live</span>
           </div>
-          <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.activeFields}</p>
+          <div className="flex items-end justify-between mt-3">
+            <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.activeFields}</p>
             <span className="text-gray-500 text-xs font-medium">Total</span>
           </div>
-        </div>
-        <div className="ag-card p-5">
-          <p className="text-xs tracking-wide text-gray-500">Soil Tests</p>
-          <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.soilTests}</p>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="ag-card p-6 hover:shadow-lg transition-shadow duration-200"
+        >
+          <p className="text-xs tracking-wide text-gray-500 font-medium">Soil Tests</p>
+          <div className="flex items-end justify-between mt-3">
+            <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.soilTests}</p>
             <span className="text-gray-500 text-xs font-medium">Completed</span>
           </div>
-        </div>
-        <div className="ag-card p-5">
-          <p className="text-xs tracking-wide text-gray-500">Recommendations</p>
-          <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.recommendations}</p>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="ag-card p-6 hover:shadow-lg transition-shadow duration-200"
+        >
+          <p className="text-xs tracking-wide text-gray-500 font-medium">Recommendations</p>
+          <div className="flex items-end justify-between mt-3">
+            <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.recommendations}</p>
             <span className="text-gray-500 text-xs font-medium">Available</span>
           </div>
-        </div>
-        <div className="ag-card p-5">
-          <p className="text-xs tracking-wide text-gray-500">Irrigation Events</p>
-          <div className="flex items-end justify-between mt-2">
-            <p className="text-2xl font-semibold text-gray-900">{dashboardData.stats.irrigationEvents}</p>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className="ag-card p-6 hover:shadow-lg transition-shadow duration-200"
+        >
+          <p className="text-xs tracking-wide text-gray-500 font-medium">Irrigation Events</p>
+          <div className="flex items-end justify-between mt-3">
+            <p className="text-3xl font-bold text-gray-900">{dashboardData.stats.irrigationEvents}</p>
             <span className="text-gray-500 text-xs font-medium">This Month</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Main grid */}
@@ -270,14 +290,14 @@ const Home = () => {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="lg:col-span-3 ag-card p-6 ag-hero-gradient"
+          className="lg:col-span-3 ag-card p-8 ag-hero-gradient shadow-lg"
         >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-600">Smart Insight</p>
+              <p className="text-sm text-gray-600 font-medium mb-2">🌦️ Smart Insight</p>
               <h3 className="text-lg md:text-xl font-semibold text-gray-900">Expected rainfall in your region this weekend. Plan irrigation accordingly.</h3>
             </div>
-            <Link to="/dashboard/reports" className="ag-cta-gradient text-white px-4 py-2 rounded-lg text-sm shadow hover:opacity-95 w-max">View Weather Report</Link>
+            <Link to="/dashboard/reports" className="ag-cta-gradient text-white px-6 py-3 rounded-lg text-sm font-medium shadow-lg hover:opacity-95 hover:shadow-xl transition-all duration-200 w-max">View Weather Report</Link>
           </div>
         </motion.div>
 
