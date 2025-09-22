@@ -43,6 +43,7 @@ const AdminDashboard = () => {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +77,20 @@ const AdminDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Keep current date fresh (minute precision is enough)
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const user = authService.getCurrentUser();
+
+  // Open Manage Profile when Settings is selected to match reference UI
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      setProfileModalOpen(true);
+    }
+  }, [activeTab]);
 
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -96,7 +110,13 @@ const AdminDashboard = () => {
               <h1 className="ag-display text-xl font-semibold text-gray-900">Admin Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
-              <input placeholder="Search..." className="hidden md:block px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none" />
+              {/* Current date */}
+              <div className="hidden sm:flex items-center gap-2 px-2 text-gray-600">
+                <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2a1 1 0 011 1v1h10V3a1 1 0 112 0v1h1a2 2 0 012 2v12a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 112 0v1zm-3 6v10a1 1 0 001 1h16a1 1 0 001-1V8H3z"/></svg>
+                <span className="text-sm">
+                  {now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen((v) => !v)}
@@ -265,7 +285,13 @@ const AdminDashboard = () => {
 
           {activeTab === 'users' && (
             <div className="px-4 sm:px-0">
-              <UserManagement />
+              <UserManagement title="User Management" />
+            </div>
+          )}
+
+          {activeTab === 'experts' && (
+            <div className="px-4 sm:px-0">
+              <UserManagement filterRole="expert" title="Expert Management" />
             </div>
           )}
 
@@ -286,15 +312,6 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'pests' && (
-            <div className="px-4 sm:px-0">
-              <div className="ag-card p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Pest & Disease Monitoring</h2>
-                <p className="text-gray-600">Coming soon: review reports and ML predictions.</p>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'irrigation' && (
             <div className="px-4 sm:px-0">
               <div className="ag-card p-6">
@@ -304,20 +321,14 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {activeTab === 'reports' && (
-            <div className="px-4 sm:px-0">
-              <div className="ag-card p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Reports & Logs</h2>
-                <p className="text-gray-600">Coming soon: PDF export and farm logbook history.</p>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'settings' && (
             <div className="px-4 sm:px-0">
               <div className="ag-card p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">System Settings</h2>
-                <p className="text-gray-600">Coming soon: API monitoring, error logs, and caching status.</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">Manage Profile & Security</h2>
+                <p className="text-gray-600">Use the dialog to update profile info, profile photo, or change password.</p>
+                <div className="mt-4">
+                  <button onClick={() => setProfileModalOpen(true)} className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]">Open Manage Profile</button>
+                </div>
               </div>
             </div>
           )}

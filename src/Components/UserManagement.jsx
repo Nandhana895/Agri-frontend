@@ -4,7 +4,7 @@ import api from '../services/api';
 import UserModal from './UserModal';
 import UserActions from './UserActions';
 
-const UserManagement = () => {
+const UserManagement = ({ filterRole, title = 'User Management' }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,9 +29,12 @@ const UserManagement = () => {
       const response = await api.get(`/admin/users?${params}`);
       
       if (response.data.success) {
-        setUsers(response.data.users);
-        setTotalPages(response.data.pagination.pages);
-        setCurrentPage(response.data.pagination.page);
+        const fetched = response.data.users || [];
+        const filtered = filterRole ? fetched.filter((u) => String(u.role).toLowerCase() === String(filterRole).toLowerCase()) : fetched;
+        setUsers(filtered);
+        // Pagination from server may not reflect client-side filter; adjust simply
+        setTotalPages(response.data.pagination?.pages || 1);
+        setCurrentPage(response.data.pagination?.page || page);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch users');
@@ -186,8 +189,8 @@ const UserManagement = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-          <p className="text-gray-600">Manage user accounts, roles, and permissions</p>
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+          <p className="text-gray-600">Manage {filterRole ? `${filterRole}s` : 'user accounts'}, roles, and permissions</p>
         </div>
         <button
           onClick={handleCreateUser}
@@ -196,7 +199,7 @@ const UserManagement = () => {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Add User/Expert
+          {filterRole === 'expert' ? 'Add Expert' : 'Add User/Expert'}
         </button>
       </div>
 

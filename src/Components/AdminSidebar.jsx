@@ -31,6 +31,12 @@ const AdminSidebar = ({ active = 'overview', onSelect }) => {
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>}
         />
         <Item
+          active={active === 'experts'}
+          onClick={() => onSelect('experts')}
+          label="Experts"
+          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-3.866 0-7 3.134-7 7h14c0-3.866-3.134-7-7-7z"/></svg>}
+        />
+        <Item
           active={active === 'crops'}
           onClick={() => onSelect('crops')}
           label="Crops"
@@ -43,22 +49,10 @@ const AdminSidebar = ({ active = 'overview', onSelect }) => {
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>}
         />
         <Item
-          active={active === 'pests'}
-          onClick={() => onSelect('pests')}
-          label="Pests & Diseases"
-          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7-7-7"/></svg>}
-        />
-        <Item
           active={active === 'irrigation'}
           onClick={() => onSelect('irrigation')}
           label="Irrigation"
           icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h18M9 3v18"/></svg>}
-        />
-        <Item
-          active={active === 'reports'}
-          onClick={() => onSelect('reports')}
-          label="Reports"
-          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h10M7 16h10"/></svg>}
         />
         <Item
           active={active === 'settings'}

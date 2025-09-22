@@ -107,7 +107,7 @@ function App() {
               <Landing 
                 onShowLogin={handleShowLogin}
                 onShowSignup={handleShowSignup}
-                isAuthenticated={isAuthenticated}
+                isAuthenticated={false}
                 onLogout={handleLogout}
               />
             } 

@@ -6,10 +6,17 @@ import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 import SowingTrendsDashboard from '../Components/SowingTrendsDashboard';
 
-const StatCard = ({ title, value }) => (
-  <div className="ag-card p-4">
-    <div className="text-sm text-gray-500">{title}</div>
-    <div className="mt-1 text-2xl font-semibold">{value}</div>
+const StatCard = ({ title, value, icon }) => (
+  <div className="ag-card p-5">
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="text-xs tracking-wide text-gray-500">{title}</div>
+        <div className="mt-1 text-2xl font-semibold text-gray-900">{value}</div>
+      </div>
+      {icon ? (
+        <div className="w-10 h-10 rounded-lg bg-green-100 text-green-700 flex items-center justify-center">{icon}</div>
+      ) : null}
+    </div>
   </div>
 );
 const ExpertDashboard = () => {
@@ -29,6 +36,7 @@ const ExpertDashboard = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [notifications, setNotifications] = useState([]); // {type:'request'|'message', text, ts, conversationId?, peerEmail?}
+  const [now, setNow] = useState(() => new Date());
   const totalUnread = useMemo(() => Object.values(unreadByConvo).reduce((a, b) => a + (b || 0), 0), [unreadByConvo]);
   const notifCount = (pendingRequests?.length || 0) + notifications.filter((n) => n.type === 'message').length;
   const [isOtherTyping, setIsOtherTyping] = useState(false);
@@ -39,6 +47,12 @@ const ExpertDashboard = () => {
     if (h < 12) return 'Good morning';
     if (h < 18) return 'Good afternoon';
     return 'Good evening';
+  }, []);
+
+  // Keep date fresh for header display
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -222,10 +236,15 @@ const ExpertDashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Expert Dashboard</h1>
+          <h1 className="text-2xl font-bold ag-display">Expert Dashboard</h1>
           <p className="mt-1 text-gray-600">{greeting}, {user?.name || 'Expert'}. Manage consultations and messages.</p>
         </div>
         <div className="ag-card px-4 py-2 flex items-center gap-3 relative">
+          {/* Date */}
+          <div className="hidden sm:flex items-center gap-2 px-2 text-gray-600">
+            <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2a1 1 0 011 1v1h10V3a1 1 0 112 0v1h1a2 2 0 012 2v12a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 112 0v1zm-3 6v10a1 1 0 001 1h16a1 1 0 001-1V8H3z"/></svg>
+            <span className="text-sm">{now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+          </div>
           {/* Notification bell */}
           <div className="relative">
             <button onClick={() => setShowNotifMenu((s) => !s)} className="px-2 py-2 rounded-lg border border-[var(--ag-border)] hover:bg-gray-50 relative flex items-center justify-center">
@@ -289,6 +308,14 @@ const ExpertDashboard = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard title="Active Conversations" value={conversations.length} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h8M8 14h5m-1 7l-4-4H7a4 4 0 01-4-4V7a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4h-3l-4 4z"/></svg>} />
+        <StatCard title="Pending Requests" value={pendingRequests.length} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>} />
+        <StatCard title="Unread Messages" value={totalUnread} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8"/></svg>} />
+        <StatCard title="Availability" value={availability ? 'Online' : 'Offline'} icon={<span className={`w-2 h-2 rounded-full ${availability ? 'bg-green-500' : 'bg-gray-400'}`}></span>} />
       </div>
 
       {/* Tabs */}

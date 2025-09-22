@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [locationLabel, setLocationLabel] = useState('');
+  const [now, setNow] = useState(() => new Date());
   const [lang, setLang] = useState(() => {
     try {
       return localStorage.getItem('ag_lang') || 'en';
@@ -48,6 +49,12 @@ const Dashboard = () => {
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate);
     };
+  }, []);
+
+  // Keep a fresh date/time for the topbar display
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   // Resolve and display user location in the topbar
@@ -167,6 +174,13 @@ const Dashboard = () => {
                 <option value="en">English</option>
                 <option value="ml">Malayalam</option>
               </select>
+              {/* Current date */}
+              <div className="hidden sm:flex items-center gap-2 px-2 text-gray-600">
+                <Calendar className="w-4 h-4 text-[var(--ag-primary-600)]" />
+                <span className="text-sm">
+                  {now.toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
               {locationLabel && (
                 <div className="hidden sm:flex items-center gap-2 px-2 text-gray-600">
                   <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
