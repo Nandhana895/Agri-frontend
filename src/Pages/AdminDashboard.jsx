@@ -7,6 +7,7 @@ import ManageProfileModal from '../Components/ManageProfileModal';
 import UserManagement from '../Components/UserManagement';
 import CropManagement from '../Components/CropManagement';
 import SowingCalendarManagement from '../Components/SowingCalendarManagement';
+import SchemeManagement from '../Components/SchemeManagement';
 
 const SidebarLink = ({ icon, label, active }) => (
   <div className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
@@ -309,6 +310,15 @@ const AdminDashboard = () => {
           {activeTab === 'sowing-calendar' && (
             <div className="px-4 sm:px-0">
               <SowingCalendarManagement />
+            </div>
+          )}
+
+          {activeTab === 'schemes' && (
+            <div className="px-4 sm:px-0">
+              <div className="ag-card p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Government Schemes</h2>
+                <SchemeManagement />
+              </div>
             </div>
           )}
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud, Calendar } from 'lucide-react';
+import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Cloud, Calendar, Globe2 } from 'lucide-react';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import authService from '../services/authService';
 import config from '../config/config';
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/dashboard/crop-profiles', label: 'Crop Profiles', icon: BarChart3 },
   { to: '/dashboard/weather-forecast', label: 'Weather Forecast', icon: Cloud },
   { to: '/dashboard/sowing-calendar', label: 'Sowing Calendar', icon: Calendar },
+  { to: '/dashboard/government-schemes', label: 'Government Schemes', icon: Globe2 },
   { to: '/dashboard/chat', label: 'Chatbox', icon: MessageSquare },
   { to: '/dashboard/reports', label: 'Reports', icon: FileText },
 ];
