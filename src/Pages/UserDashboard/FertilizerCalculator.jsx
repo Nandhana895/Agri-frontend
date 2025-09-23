@@ -115,6 +115,23 @@ const FertilizerCalculator = () => {
     }
   };
 
+  const handleSavePlanToLogbook = async () => {
+    if (!dosage) return;
+    try {
+      const logData = {
+        date: new Date().toISOString().split('T')[0],
+        activityType: 'Fertilizer',
+        crop: form.crop ? String(form.crop).trim() : undefined,
+        notes: `Fertilizer plan saved. Total: ${dosage.totalAmount} kg. Breakdown - ${Object.entries(dosage.breakdown || {})
+          .map(([k, v]) => `${k}: ${v} kg`).join(', ')}. ${dosage.notes ? `Notes: ${dosage.notes}` : ''}`.trim()
+      };
+      await api.post('/farmer/logs', logData);
+      alert('Fertilizer plan saved to Farm Logbook!');
+    } catch (error) {
+      alert('Failed to save to Logbook. Please try again.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -292,6 +309,18 @@ const FertilizerCalculator = () => {
                   <p className="text-blue-800 text-sm">{dosage.notes}</p>
                 </div>
               )}
+
+              <div>
+                <button
+                  type="button"
+                  onClick={handleSavePlanToLogbook}
+                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  {/* Bookmark icon */}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3-7 3V5z"/></svg>
+                  Save Fertilizer Plan to Logbook
+                </button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">

@@ -214,7 +214,24 @@ const GovernmentSchemes = () => {
 
   const saveToLogbook = async (s) => {
     try {
-      await api.post('/farmer/log', { type: 'scheme_saved', title: s.title, category: s.category, crop: s.crop, region: s.region, source: s.source });
+      const cropName = Array.isArray(s.crop) ? s.crop[0] : s.crop;
+      const regions = Array.isArray(s.region) ? s.region.join(', ') : s.region;
+      const noteParts = [
+        `Scheme: ${s.title}`,
+        s.category ? `Category: ${s.category}` : '',
+        cropName ? `Crops: ${Array.isArray(s.crop) ? s.crop.join(', ') : s.crop}` : '',
+        regions ? `Region: ${regions}` : '',
+        s.source ? `Source: ${s.source}` : ''
+      ].filter(Boolean);
+
+      const logData = {
+        date: new Date().toISOString().split('T')[0],
+        activityType: 'Government Scheme',
+        crop: cropName || undefined,
+        notes: noteParts.join(' | ')
+      };
+
+      await api.post('/farmer/logs', logData);
       setNotif('Saved to your logbook');
       setTimeout(() => setNotif(''), 3000);
     } catch (e) {

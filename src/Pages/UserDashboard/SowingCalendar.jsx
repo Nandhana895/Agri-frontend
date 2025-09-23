@@ -219,18 +219,14 @@ const SowingCalendar = () => {
   const handleAddToLogbook = async (result) => {
     try {
       const logData = {
-        type: 'sowing_plan',
+        date: new Date().toISOString().split('T')[0],
+        activityType: 'Sowing',
         crop: result.crop,
-        region: result.region,
-        season: result.season,
-        startMonth: result.startMonth,
-        endMonth: result.endMonth,
-        notes: `Sowing calendar for ${result.crop} - ${result.startMonth} to ${result.endMonth}`,
-        date: new Date().toISOString()
+        notes: `Saved from Sowing Calendar. Ideal window: ${result.startMonth}–${result.endMonth}${result.region ? `, Region: ${result.region}` : ''}${result.season ? `, Season: ${result.season}` : ''}.`
       };
-      
-      await api.post('/farmer/log', logData);
-      alert('Sowing plan added to Farm Logbook successfully!');
+
+      await api.post('/farmer/logs', logData);
+      alert('Sowing date saved to Farm Logbook!');
     } catch (error) {
       console.error('Failed to add to logbook:', error);
       alert('Failed to add to logbook. Please try again.');
