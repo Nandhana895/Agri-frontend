@@ -270,17 +270,28 @@ const SowingCalendar = () => {
         transition={{ duration: 0.35 }}
         className="ag-card overflow-hidden relative"
       >
-        <div className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full opacity-20 ag-cta-gradient blur-3xl" />
-        <div className="ag-hero-gradient p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h2 className="ag-display text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Calendar className="w-8 h-8 text-[var(--ag-primary-600)]" />
+        <div className="relative">
+          <img
+            src="https://images.unsplash.com/photo-1597474417024-3ca3baa9fb13?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            alt="Indian paddy fields"
+            className="w-full h-48 md:h-64 object-cover"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://source.unsplash.com/1600x400/?india,farmer,fields';
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="absolute inset-0 flex items-end">
+            <div className="px-6 md:px-8 pb-5">
+              <h2 className="ag-display text-2xl md:text-3xl font-bold text-white flex items-center gap-3 drop-shadow">
+                <Calendar className="w-8 h-8 text-white" />
                 {t.title}
               </h2>
-              <p className="text-gray-600 mt-1 text-sm md:text-base">{t.subtitle}</p>
+              <p className="text-white/90 mt-1 text-sm md:text-base max-w-2xl drop-shadow">{t.subtitle}</p>
             </div>
-            {/* Language control moved to Navbar; listening via 'langChanged' event */}
           </div>
         </div>
       </motion.div>
@@ -558,6 +569,12 @@ const SowingCalendar = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Simple themed footer */}
+      <div className="ag-card mt-6 p-6 text-center">
+        <p className="text-sm text-gray-600">
+          Crafted for Indian agriculture • Stay informed on seasonal sowing and regional advisories.
+        </p>
+      </div>
     </div>
   );
 };

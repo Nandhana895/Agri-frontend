@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import MapWithWeather from '../../Components/MapWithWeather';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Cloud, Droplets, Thermometer, Wind, AlertTriangle, Sun, CloudRain } from 'lucide-react';
 import authService from '../../services/authService';
 import api from '../../services/api';
 
@@ -72,40 +73,119 @@ const QuickActionCard = ({ to, icon, label, description, color = "green" }) => (
   </Link>
 );
 
-const WeatherWidget = () => (
-  <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold">Weather Forecast</h3>
-      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-      </svg>
-    </div>
-    <div className="grid grid-cols-3 gap-4">
-      <div className="text-center">
-        <div className="text-2xl mb-1">☀️</div>
-        <div className="text-sm font-medium">Today</div>
-        <div className="text-lg font-bold">28°C</div>
-        <div className="text-xs opacity-90">Sunny</div>
+const WeatherWidget = ({ weatherData, loading, error }) => {
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Weather Forecast</h3>
+          <Cloud className="w-6 h-6" />
+        </div>
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+          <div className="text-sm opacity-90">Loading weather data...</div>
+        </div>
       </div>
-      <div className="text-center">
-        <div className="text-2xl mb-1">⛅</div>
-        <div className="text-sm font-medium">Tomorrow</div>
-        <div className="text-lg font-bold">26°C</div>
-        <div className="text-xs opacity-90">Partly Cloudy</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Weather Forecast</h3>
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <div className="text-center py-4">
+          <div className="text-sm opacity-90">Weather service unavailable</div>
+          <Link to="/dashboard/weather-forecast" className="text-xs underline mt-2 block">View Weather Page</Link>
+        </div>
       </div>
-      <div className="text-center">
-        <div className="text-2xl mb-1">🌧️</div>
-        <div className="text-sm font-medium">Day After</div>
-        <div className="text-lg font-bold">24°C</div>
-        <div className="text-xs opacity-90">Light Rain</div>
+    );
+  }
+
+  if (!weatherData) {
+    return (
+      <div className="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Weather Forecast</h3>
+          <Cloud className="w-6 h-6" />
+        </div>
+        <div className="text-center py-4">
+          <div className="text-sm opacity-90">No weather data available</div>
+          <Link to="/dashboard/weather-forecast" className="text-xs underline mt-2 block">View Weather Page</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const getWeatherIcon = (icon) => {
+    switch (icon) {
+      case '01d': case '01n': return '☀️';
+      case '02d': case '02n': case '03d': case '03n': return '⛅';
+      case '04d': case '04n': return '☁️';
+      case '09d': case '09n': case '10d': case '10n': return '🌧️';
+      case '11d': case '11n': return '⛈️';
+      case '13d': case '13n': return '❄️';
+      case '50d': case '50n': return '🌫️';
+      default: return '☀️';
+    }
+  };
+
+  const hasAlerts = weatherData.alerts && weatherData.alerts.length > 0;
+  const hasRecommendations = weatherData.recommendations && weatherData.recommendations.length > 0;
+
+  return (
+    <div className={`bg-gradient-to-br ${hasAlerts ? 'from-red-500 to-red-600' : 'from-blue-500 to-blue-600'} rounded-xl p-6 text-white`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Weather Forecast</h3>
+        <div className="flex items-center gap-2">
+          {hasAlerts && <AlertTriangle className="w-5 h-5" />}
+          <Cloud className="w-6 h-6" />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div className="text-center">
+          <div className="text-2xl mb-1">{getWeatherIcon(weatherData.current.icon)}</div>
+          <div className="text-sm font-medium">Today</div>
+          <div className="text-lg font-bold">{weatherData.current.temperature}°C</div>
+          <div className="text-xs opacity-90 capitalize">{weatherData.current.description}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl mb-1">{getWeatherIcon(weatherData.forecast[1]?.icon)}</div>
+          <div className="text-sm font-medium">Tomorrow</div>
+          <div className="text-lg font-bold">{weatherData.forecast[1]?.temp}°C</div>
+          <div className="text-xs opacity-90 capitalize">{weatherData.forecast[1]?.description}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl mb-1">{getWeatherIcon(weatherData.forecast[2]?.icon)}</div>
+          <div className="text-sm font-medium">Day After</div>
+          <div className="text-lg font-bold">{weatherData.forecast[2]?.temp}°C</div>
+          <div className="text-xs opacity-90 capitalize">{weatherData.forecast[2]?.description}</div>
+        </div>
+      </div>
+      
+      {(hasAlerts || hasRecommendations) && (
+        <div className="mt-4 p-3 bg-white/20 rounded-lg">
+          <div className="text-sm font-medium mb-1">
+            {hasAlerts ? '⚠️ Weather Alert' : '🌱 Agricultural Impact'}
+          </div>
+          <div className="text-xs opacity-90">
+            {hasAlerts 
+              ? weatherData.alerts[0] 
+              : (hasRecommendations ? weatherData.recommendations[0] : 'Good conditions for crop growth')
+            }
+          </div>
+        </div>
+      )}
+      
+      <div className="mt-3 text-center">
+        <Link to="/dashboard/weather-forecast" className="text-xs underline">View Full Forecast</Link>
       </div>
     </div>
-    <div className="mt-4 p-3 bg-white/20 rounded-lg">
-      <div className="text-sm font-medium mb-1">🌱 Agricultural Impact</div>
-      <div className="text-xs opacity-90">Good conditions for crop growth. Consider irrigation reduction.</div>
-    </div>
-  </div>
-);
+  );
+};
 
 const FarmOverviewCard = ({ fields, crops, health }) => (
   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
@@ -203,6 +283,9 @@ const Home = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState('');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -220,6 +303,53 @@ const Home = () => {
     };
 
     fetchDashboardData();
+    
+    // Fetch weather data
+    const fetchWeatherData = async () => {
+      try {
+        setWeatherLoading(true);
+        setWeatherError('');
+        
+        // Get user's location
+        const getLocation = () => {
+          return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+              resolve({ lat: 10.8505, lon: 76.2711 }); // Default to Kerala
+              return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude
+                });
+              },
+              () => {
+                resolve({ lat: 10.8505, lon: 76.2711 }); // Default to Kerala
+              },
+              { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+            );
+          });
+        };
+        
+        const coords = await getLocation();
+        const response = await api.get(`/farmer/weather?lat=${coords.lat}&lon=${coords.lon}`);
+        
+        if (response.data.success) {
+          setWeatherData(response.data);
+        } else {
+          setWeatherError(response.data.message || 'Failed to fetch weather data');
+        }
+      } catch (err) {
+        console.error('Weather fetch error:', err);
+        setWeatherError(err?.response?.data?.message || 'Failed to fetch weather data');
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+    
+    fetchWeatherData();
   }, []);
 
   if (loading) {
@@ -388,7 +518,7 @@ const Home = () => {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Weather Widget */}
-          <WeatherWidget />
+          <WeatherWidget weatherData={weatherData} loading={weatherLoading} error={weatherError} />
 
           {/* Recommendations */}
           <AgriculturalCard
