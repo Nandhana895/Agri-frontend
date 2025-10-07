@@ -265,10 +265,10 @@ const SowingCalendar = () => {
     <div className="space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="ag-card overflow-hidden relative"
+        transition={{ duration: 0.5, ease: [0.22,0.61,0.36,1] }}
+        className="ag-card overflow-hidden relative ag-texture-soil"
       >
         <div className="relative">
           <img
@@ -290,7 +290,7 @@ const SowingCalendar = () => {
                 <Calendar className="w-8 h-8 text-white" />
                 {t.title}
               </h2>
-              <p className="text-white/90 mt-1 text-sm md:text-base max-w-2xl drop-shadow">{t.subtitle}</p>
+              <p className="text-white/90 mt-1 ag-label md:text-base max-w-2xl drop-shadow">{t.subtitle}</p>
             </div>
           </div>
         </div>
@@ -300,13 +300,13 @@ const SowingCalendar = () => {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
+        transition={{ duration: 0.45, delay: 0.05, ease: [0.22,0.61,0.36,1] }}
         className="ag-card p-6 sticky top-4 z-30"
       >
         <form onSubmit={handleSearch} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block ag-label font-medium text-gray-700 mb-2">
                 <Leaf className="w-4 h-4 inline mr-2" />
                 {t.cropLabel} *
               </label>
@@ -324,7 +324,7 @@ const SowingCalendar = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block ag-label font-medium text-gray-700 mb-2">
                 <MapPin className="w-4 h-4 inline mr-2" />
                 {t.regionLabel}
               </label>
@@ -338,7 +338,7 @@ const SowingCalendar = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block ag-label font-medium text-gray-700 mb-2">
                 <Clock className="w-4 h-4 inline mr-2" />
                 {t.seasonLabel}
               </label>
@@ -358,7 +358,7 @@ const SowingCalendar = () => {
           <button
             type="submit"
             disabled={loading || !searchForm.crop}
-            className="w-full md:w-auto bg-[var(--ag-primary-600)] text-white px-6 py-2 rounded-lg hover:bg-[var(--ag-primary-700)] disabled:opacity-50 disabled:cursor-not-allowed shadow flex items-center justify-center gap-2"
+            className="w-full md:w-auto bg-[var(--ag-primary-600)] text-white px-6 py-2 rounded-xl hover:bg-[var(--ag-primary-700)] disabled:opacity-50 disabled:cursor-not-allowed shadow flex items-center justify-center gap-2 ag-touch ag-focus-ring"
           >
             <Search className="w-4 h-4" />
             {loading ? 'Searching...' : t.searchButton}
@@ -403,10 +403,10 @@ const SowingCalendar = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`ag-card p-6 cursor-pointer transition-all duration-200 ${
+                  className={`ag-card p-6 cursor-pointer transition-all duration-300 ${
                     selectedResult === result 
                       ? 'ring-2 ring-[var(--ag-primary-500)] bg-[var(--ag-primary-50)]' 
-                      : 'hover:shadow-lg'
+                      : 'hover:shadow-xl'
                   }`}
                   onClick={() => setSelectedResult(result)}
                 >
@@ -414,7 +414,7 @@ const SowingCalendar = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-xl font-bold text-gray-900">{result.crop}</h3>
-                        <span className="px-3 py-1 bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] rounded-full text-sm font-medium">
+                        <span className="px-3 py-1 bg-[var(--ag-primary-100)] text-[var(--ag-primary-700)] rounded-full ag-label font-medium">
                           {result.season}
                         </span>
                       </div>
@@ -441,14 +441,14 @@ const SowingCalendar = () => {
                         )}
                       </div>
                       {result.notes && (
-                        <p className="text-sm text-gray-600 mt-2">{result.notes}</p>
+                        <p className="ag-label text-gray-600 mt-2">{result.notes}</p>
                       )}
                       {result.varieties && result.varieties.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-sm font-medium text-gray-700 mb-1">Varieties:</p>
+                          <p className="ag-label font-medium text-gray-700 mb-1">Varieties:</p>
                           <div className="flex flex-wrap gap-1">
                             {result.varieties.map((variety, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                              <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 rounded ag-fine">
                                 {variety}
                               </span>
                             ))}
@@ -492,10 +492,10 @@ const SowingCalendar = () => {
                 className="ag-card p-6"
               >
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="ag-subhead font-semibold text-gray-900 mb-2">
                     Sowing Timeline for {selectedResult.crop}
                   </h3>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 ag-label text-gray-600">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
                       <span>Ideal sowing period</span>
@@ -519,23 +519,21 @@ const SowingCalendar = () => {
                       className={`relative group`}
                     >
                       <div
-                        className={`h-12 rounded-lg flex items-center justify-center text-xs font-medium transition-all duration-200 ${
+                        className={`h-12 rounded-lg flex items-center justify-center ag-fine font-medium transition-all duration-300 ${
                           month.status === 'ideal'
-                            ? 'bg-green-500 text-white'
+                            ? 'ag-season--ideal'
                             : month.status === 'possible'
-                            ? 'bg-yellow-500 text-white'
-                            : 'bg-red-500 text-white'
+                            ? 'ag-season--possible'
+                            : 'ag-season--not'
                         } ${
-                          month.month === currentMonth ? 'ring-2 ring-blue-400 shadow-lg' : ''
+                          month.month === currentMonth ? 'ring-2 ring-[var(--ag-sky-500)] shadow-lg' : ''
                         }`}
                         title={month.tooltip}
                       >
                         {month.monthName}
                       </div>
                       {month.month === currentMonth && (
-                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
-                          Current
-                        </div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-green-700 ag-label">🌱</div>
                       )}
                     </div>
                   ))}
@@ -553,11 +551,11 @@ const SowingCalendar = () => {
                       return <Icon className={`w-5 h-5 ${color}`} />;
                     })()}
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="ag-label font-medium text-gray-900">
                         Current Status: {getCurrentStatus(selectedResult).message}
                       </p>
                       {getCurrentStatus(selectedResult).status === 'late' && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="ag-fine text-gray-600 mt-1">
                           Your sowing window has closed. Consult local KVK for late-sowing advisories.
                         </p>
                       )}

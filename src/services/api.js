@@ -61,6 +61,27 @@ export const chatApi = {
     const res = await api.post(`/chat/conversations/${conversationId}/read`);
     return res.data;
   },
+  async sendMessage(conversationId, { text = '', files = [] } = {}) {
+    const form = new FormData();
+    if (text) form.append('text', text);
+    (files || []).forEach((f) => form.append('attachments', f));
+    const res = await api.post(`/chat/conversations/${conversationId}/messages`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return res.data;
+  },
+  async pinMessage(conversationId, messageId, pinned) {
+    const res = await api.post(`/chat/conversations/${conversationId}/pin`, { messageId, pinned });
+    return res.data;
+  },
+  async searchMessages(conversationId, query) {
+    const res = await api.get(`/chat/conversations/${conversationId}/search`, { params: { query } });
+    return res.data;
+  },
+  async exportConversation(conversationId) {
+    const res = await api.get(`/chat/conversations/${conversationId}/export`, { responseType: 'blob' });
+    return res.data;
+  },
   async sendChatRequest(expertEmail, note = '') {
     const res = await api.post('/chat/requests', { expertEmail, note });
     return res.data;

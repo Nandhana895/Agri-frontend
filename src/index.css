@@ -4,23 +4,30 @@
 /* AgriSense Theme Tokens */
 :root {
   /* Primary greens */
+  --ag-primary-700: #25672a; /* deeper field green for contrast */
   --ag-primary-600: #2e7d32; /* rich agri green */
-  --ag-primary-500: #34a853;
-  --ag-primary-400: #5ac178;
+  --ag-primary-500: #34a853; /* leafy */
+  --ag-primary-400: #5ac178; /* sprout */
   --ag-primary-50: #eef8f0;
 
   /* Accent earth tones */
   --ag-accent-600: #8d6e63; /* soil brown */
   --ag-accent-400: #b2957e;
+  --ag-accent-200: #e8dcd4;
 
   /* Sky and field */
+  --ag-sky-500: #3b82f6;
   --ag-sky-400: #60a5fa;
+  --ag-sky-50: #eef6ff;
   --ag-field-200: #e3f2d1;
+  --ag-field-50: #f4f9ed;
 
   /* Surfaces */
   --ag-surface: #ffffff;
   --ag-muted: #f7faf7;
   --ag-border: #e6efe6;
+  --ag-shadow: 0 10px 30px rgba(28, 57, 36, 0.08);
+  --ag-shadow-hover: 0 18px 40px rgba(28,57,36,0.14);
 }
 
 /* Smooth scrolling */
@@ -35,6 +42,8 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
     'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  font-size: 16.5px; /* slightly larger for readability */
+  line-height: 1.6;  /* relaxed line height */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -45,18 +54,26 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* Type scale utilities */
+.ag-h1 { font-family: 'Fraunces', serif; font-weight: 800; font-size: clamp(28px, 3vw, 36px); line-height: 1.1; }
+.ag-h2 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 24px; line-height: 1.2; }
+.ag-subhead { font-weight: 600; font-size: 20px; line-height: 1.3; }
+.ag-body { font-size: 16.5px; line-height: 1.6; }
+.ag-label { font-size: 14px; line-height: 1.4; letter-spacing: 0.01em; }
+.ag-fine { font-size: 12px; line-height: 1.3; letter-spacing: 0.02em; }
+
 /* Card style utility */
 .ag-card {
   background: var(--ag-surface);
   border: 1px solid var(--ag-border);
   border-radius: 1rem;
-  box-shadow: 0 10px 30px rgba(28, 57, 36, 0.08);
-  transition: box-shadow 200ms ease, transform 200ms ease;
+  box-shadow: var(--ag-shadow);
+  transition: box-shadow 300ms cubic-bezier(.22,.61,.36,1), transform 300ms cubic-bezier(.22,.61,.36,1);
 }
 
 .ag-card:hover {
-  box-shadow: 0 16px 36px rgba(28, 57, 36, 0.12);
-  transform: translateY(-1px);
+  box-shadow: var(--ag-shadow-hover);
+  transform: translateY(-2px) scale(1.01);
 }
 
 /* Gradient utilities */
@@ -65,8 +82,27 @@ body {
     linear-gradient(180deg, var(--ag-primary-50), #ffffff 60%);
 }
 
+/* Sunrise to leaf to sky gradient for hero */
+.ag-sunrise-gradient {
+  background-image:
+    radial-gradient(900px 300px at 20% -10%, rgba(255, 213, 128, 0.35), transparent),
+    radial-gradient(900px 300px at 80% -10%, rgba(99, 179, 237, 0.25), transparent),
+    linear-gradient(135deg, #f6d365 0%, #bfe3a3 45%, #a7d1ff 100%);
+}
+
 .ag-cta-gradient {
   background: linear-gradient(135deg, var(--ag-primary-600), var(--ag-primary-400));
+}
+
+/* Navbar subtle field gradient */
+.ag-navbar-gradient {
+  background-image: linear-gradient(180deg, rgba(227, 242, 209, 0.8), rgba(255,255,255,0.85));
+}
+
+/* Glass blur utility */
+.ag-glass {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(8px);
 }
 
 /* Section title accent */
@@ -89,6 +125,9 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--ag-border), transparent);
 }
+
+/* Horizon divider for sky sections */
+.ag-horizon { height: 1px; background: linear-gradient(90deg, rgba(0,0,0,0), rgba(255,255,255,0.7), rgba(0,0,0,0)); }
 
 /* Badges */
 .ag-badge {
@@ -127,12 +166,63 @@ body {
   color: #111827;
 }
 
+/* Tiny sparkline chart (supply data via CSS vars) */
+.ag-sparkline {
+  --stroke: #34a853;
+  --bg: #eef8f0;
+  position: relative;
+  height: 40px;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ag-sparkline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px) 0 0 / 24px 24px;
+}
+.ag-sparkline svg path {
+  stroke: var(--stroke);
+  fill: none;
+  stroke-width: 2;
+}
+
+/* Seasonal gradient chips/bars */
+.ag-season--ideal { background-image: linear-gradient(90deg, #34a853, #5ac178); color: #fff; }
+.ag-season--possible { background-image: linear-gradient(90deg, #f0b429, #ffd166); color: #111827; }
+.ag-season--not { background-image: linear-gradient(90deg, #d64545, #ef6b6b); color: #fff; }
+
+/* Soil texture (subtle) */
+.ag-texture-soil { background-image: radial-gradient(rgba(141,110,99,0.06) 1px, transparent 1px); background-size: 10px 10px; }
+
+/* Sky gradient utilities */
+.ag-sky-soft { background-image: linear-gradient(180deg, var(--ag-sky-50), #ffffff); }
+.ag-sky-banner { background-image: linear-gradient(135deg, #cfe9ff, #9dd2ff); }
+
 /* Micro-interactions */
 @keyframes ag-fade-up {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .ag-fade-up {
-  animation: ag-fade-up 300ms ease forwards;
+  animation: ag-fade-up 500ms cubic-bezier(.22,.61,.36,1) forwards;
 }
+
+/* Hover lift */
+.ag-lift:hover { transform: translateY(-2px) scale(1.01) rotate(0.1deg); box-shadow: var(--ag-shadow-hover); }
+
+/* Subtle pulse for alerts */
+@keyframes ag-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.ag-pulse { animation: ag-pulse 1.6s ease-in-out infinite; }
+
+/* Accessibility - focus ring */
+.ag-focus-ring:focus { outline: 3px solid var(--ag-primary-700); outline-offset: 2px; }
+
+/* Min touch target */
+.ag-touch { min-height: 44px; min-width: 44px; }

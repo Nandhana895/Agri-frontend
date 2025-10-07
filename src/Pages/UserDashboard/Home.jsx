@@ -8,18 +8,18 @@ import api from '../../services/api';
 
 const AgriculturalCard = ({ title, children, className = "", icon }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4 }}
-    className={`bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 ${className}`}
+    transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+    className={`ag-card rounded-xl p-6 hover:shadow-xl transition-all duration-500 ${className}`}
   >
     <div className="flex items-center gap-3 mb-4">
       {icon && (
-        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center ag-cta-gradient text-white">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold text-gray-900 ag-section-title">{title}</h3>
+      <h3 className="ag-subhead font-semibold text-gray-900 ag-section-title">{title}</h3>
     </div>
     <div className="text-gray-700">{children}</div>
   </motion.div>
@@ -27,10 +27,10 @@ const AgriculturalCard = ({ title, children, className = "", icon }) => (
 
 const MetricCard = ({ label, value, unit, trend, icon, color = "green" }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 12 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3 }}
-    className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300"
+    transition={{ duration: 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+    className="ag-card rounded-xl p-6 hover:shadow-xl transition-all duration-500"
   >
     <div className="flex items-center justify-between mb-3">
       <div className={`w-12 h-12 bg-${color}-100 rounded-xl flex items-center justify-center`}>
@@ -44,8 +44,8 @@ const MetricCard = ({ label, value, unit, trend, icon, color = "green" }) => (
     </div>
     <div className="space-y-1">
       <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-600">{label}</p>
-      {unit && <p className="text-xs text-gray-500">{unit}</p>}
+      <p className="ag-label text-gray-600">{label}</p>
+      {unit && <p className="ag-fine text-gray-500">{unit}</p>}
     </div>
   </motion.div>
 );
@@ -53,17 +53,17 @@ const MetricCard = ({ label, value, unit, trend, icon, color = "green" }) => (
 const QuickActionCard = ({ to, icon, label, description, color = "green" }) => (
   <Link to={to} className="group">
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 group-hover:border-green-200"
+      whileHover={{ scale: 1.015, rotate: 0.1 }}
+      whileTap={{ scale: 0.985 }}
+      className="ag-card rounded-xl p-6 hover:shadow-xl transition-all duration-500 group-hover:border-green-200 ag-lift"
     >
       <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 bg-${color}-100 rounded-xl flex items-center justify-center group-hover:bg-${color}-200 transition-colors duration-300`}>
+        <div className={`w-14 h-14 bg-${color}-100 rounded-xl flex items-center justify-center transition-colors duration-300`}>
           {icon}
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-300">{label}</h4>
-          <p className="text-sm text-gray-600 mt-1">{description}</p>
+          <h4 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-300 ag-label">{label}</h4>
+          <p className="text-sm text-gray-600 mt-1 ag-body">{description}</p>
         </div>
         <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -76,29 +76,30 @@ const QuickActionCard = ({ to, icon, label, description, color = "green" }) => (
 const WeatherWidget = ({ weatherData, loading, error }) => {
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+      <div className="ag-sky-banner rounded-xl p-6 text-gray-900">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Weather Forecast</h3>
-          <Cloud className="w-6 h-6" />
+          <h3 className="ag-subhead font-semibold">Weather Forecast</h3>
+          <Cloud className="w-6 h-6 text-blue-700" />
         </div>
         <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-          <div className="text-sm opacity-90">Loading weather data...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <div className="text-sm text-gray-700">Loading weather data...</div>
         </div>
+        <div className="ag-horizon mt-2" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
+      <div className="rounded-xl p-6 text-red-800 bg-red-50 border border-red-200">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Weather Forecast</h3>
+          <h3 className="ag-subhead font-semibold">Weather Forecast</h3>
           <AlertTriangle className="w-6 h-6" />
         </div>
         <div className="text-center py-4">
-          <div className="text-sm opacity-90">Weather service unavailable</div>
-          <Link to="/dashboard/weather-forecast" className="text-xs underline mt-2 block">View Weather Page</Link>
+          <div className="text-sm">Weather service unavailable</div>
+          <Link to="/dashboard/weather-forecast" className="text-xs underline mt-2 block text-red-700">View Weather Page</Link>
         </div>
       </div>
     );
@@ -136,42 +137,42 @@ const WeatherWidget = ({ weatherData, loading, error }) => {
   const hasRecommendations = weatherData.recommendations && weatherData.recommendations.length > 0;
 
   return (
-    <div className={`bg-gradient-to-br ${hasAlerts ? 'from-red-500 to-red-600' : 'from-blue-500 to-blue-600'} rounded-xl p-6 text-white`}>
+    <div className={`rounded-xl p-6 ${hasAlerts ? 'bg-red-50 border border-red-200 text-red-800' : 'ag-sky-banner text-gray-900'}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Weather Forecast</h3>
+        <h3 className="ag-subhead font-semibold">Weather Forecast</h3>
         <div className="flex items-center gap-2">
           {hasAlerts && <AlertTriangle className="w-5 h-5" />}
-          <Cloud className="w-6 h-6" />
+          <Cloud className="w-6 h-6 text-blue-700" />
         </div>
       </div>
       
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center">
           <div className="text-2xl mb-1">{getWeatherIcon(weatherData.current.icon)}</div>
-          <div className="text-sm font-medium">Today</div>
+          <div className="ag-label font-medium">Today</div>
           <div className="text-lg font-bold">{weatherData.current.temperature}°C</div>
-          <div className="text-xs opacity-90 capitalize">{weatherData.current.description}</div>
+          <div className="ag-fine text-gray-700 capitalize">{weatherData.current.description}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl mb-1">{getWeatherIcon(weatherData.forecast[1]?.icon)}</div>
-          <div className="text-sm font-medium">Tomorrow</div>
+          <div className="ag-label font-medium">Tomorrow</div>
           <div className="text-lg font-bold">{weatherData.forecast[1]?.temp}°C</div>
-          <div className="text-xs opacity-90 capitalize">{weatherData.forecast[1]?.description}</div>
+          <div className="ag-fine text-gray-700 capitalize">{weatherData.forecast[1]?.description}</div>
         </div>
         <div className="text-center">
           <div className="text-2xl mb-1">{getWeatherIcon(weatherData.forecast[2]?.icon)}</div>
-          <div className="text-sm font-medium">Day After</div>
+          <div className="ag-label font-medium">Day After</div>
           <div className="text-lg font-bold">{weatherData.forecast[2]?.temp}°C</div>
-          <div className="text-xs opacity-90 capitalize">{weatherData.forecast[2]?.description}</div>
+          <div className="ag-fine text-gray-700 capitalize">{weatherData.forecast[2]?.description}</div>
         </div>
       </div>
       
       {(hasAlerts || hasRecommendations) && (
-        <div className="mt-4 p-3 bg-white/20 rounded-lg">
-          <div className="text-sm font-medium mb-1">
+        <div className="mt-4 p-3 bg-white/40 rounded-lg">
+          <div className="ag-label font-medium mb-1">
             {hasAlerts ? '⚠️ Weather Alert' : '🌱 Agricultural Impact'}
           </div>
-          <div className="text-xs opacity-90">
+          <div className="ag-fine text-gray-700">
             {hasAlerts 
               ? weatherData.alerts[0] 
               : (hasRecommendations ? weatherData.recommendations[0] : 'Good conditions for crop growth')
@@ -181,34 +182,35 @@ const WeatherWidget = ({ weatherData, loading, error }) => {
       )}
       
       <div className="mt-3 text-center">
-        <Link to="/dashboard/weather-forecast" className="text-xs underline">View Full Forecast</Link>
+        <Link to="/dashboard/weather-forecast" className="ag-fine underline text-blue-700">View Full Forecast</Link>
       </div>
+      {!hasAlerts && <div className="ag-horizon mt-4" />}
     </div>
   );
 };
 
 const FarmOverviewCard = ({ fields, crops, health }) => (
-  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200 ag-texture-soil">
     <div className="flex items-center gap-3 mb-4">
-      <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+      <div className="w-10 h-10 ag-cta-gradient rounded-lg flex items-center justify-center text-white">
         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-gray-900">Farm Overview</h3>
+      <h3 className="ag-subhead font-semibold text-gray-900">Farm Overview</h3>
     </div>
     <div className="grid grid-cols-3 gap-4">
       <div className="text-center">
         <div className="text-2xl font-bold text-green-700">{fields}</div>
-        <div className="text-sm text-gray-600">Active Fields</div>
+        <div className="ag-label text-gray-600">Active Fields</div>
       </div>
       <div className="text-center">
         <div className="text-2xl font-bold text-green-700">{crops}</div>
-        <div className="text-sm text-gray-600">Crop Types</div>
+        <div className="ag-label text-gray-600">Crop Types</div>
       </div>
       <div className="text-center">
         <div className="text-2xl font-bold text-green-700">{health}%</div>
-        <div className="text-sm text-gray-600">Health Score</div>
+        <div className="ag-label text-gray-600">Health Score</div>
       </div>
     </div>
   </div>
@@ -356,8 +358,8 @@ const Home = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your agricultural dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 ag-label">Loading your agricultural dashboard...</p>
         </div>
       </div>
     );
@@ -384,17 +386,17 @@ const Home = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Professional Hero Section */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 rounded-2xl shadow-2xl overflow-hidden relative ag-fade-up"
+        transition={{ duration: 0.6, ease: [0.22, 0.61, 0.36, 1] }}
+        className="ag-sunrise-gradient rounded-2xl shadow-2xl overflow-hidden relative ag-fade-up"
       >
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
         
         <div className="relative z-10 p-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -406,11 +408,11 @@ const Home = () => {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-3xl lg:text-4xl font-bold text-white">Welcome back, {firstName}</h1>
-                  <p className="text-green-100 text-lg">Your Agricultural Command Center</p>
+                  <h1 className="ag-h1 text-white">Welcome back, {firstName}</h1>
+                  <p className="text-green-100 ag-subhead">Your Agricultural Command Center</p>
                 </div>
               </div>
-              <p className="text-green-100 text-lg max-w-2xl leading-relaxed">
+              <p className="text-green-100 ag-body max-w-2xl">
                 Monitor your farm's performance, optimize crop yields, and make data-driven decisions with our comprehensive agricultural management platform.
               </p>
             </div>
@@ -418,7 +420,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link 
                 to="/dashboard/reports" 
-                className="bg-white text-green-700 px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-green-50 flex items-center justify-center gap-2"
+                className="bg-white text-green-700 px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-500 hover:bg-green-50 flex items-center justify-center gap-2 ag-touch ag-focus-ring"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -427,7 +429,7 @@ const Home = () => {
               </Link>
               <Link 
                 to="/dashboard/chat" 
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-green-700 transition-all duration-300 flex items-center justify-center gap-2"
+                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-green-700 transition-all duration-500 flex items-center justify-center gap-2 ag-touch ag-focus-ring"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />

@@ -146,8 +146,17 @@ const Dashboard = () => {
           {navItems.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to;
             return (
-              <Link key={to} to={to} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${active ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)]' : 'text-gray-700 hover:bg-[var(--ag-muted)]'}`}>
-                <Icon className="w-5 h-5" />
+              <Link
+                key={to}
+                to={to}
+                className={`relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                  active
+                    ? 'bg-[var(--ag-primary-50)] text-[var(--ag-primary-700)] shadow-sm'
+                    : 'text-gray-700 hover:bg-[var(--ag-muted)]'
+                }`}
+              >
+                <span className={`absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r ${active ? 'bg-[var(--ag-primary-500)]' : 'bg-transparent'}`}></span>
+                <Icon className={`w-5 h-5 ${active ? 'text-[var(--ag-primary-600)]' : ''}`} />
                 <span className="truncate">{label}</span>
               </Link>
             );
@@ -158,13 +167,23 @@ const Dashboard = () => {
       {/* Content */}
       <div className="flex-1 min-w-0">
         {/* Topbar */}
-        <header className="bg-white/95 backdrop-blur-md border-b border-[var(--ag-border)] sticky top-0 z-40 shadow-sm">
+        <header className="bg-white/90 backdrop-blur-md border-b border-[var(--ag-border)] sticky top-0 z-40 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button className="md:hidden p-2" onClick={() => setIsSidebarOpen((v) => !v)}>
                 <Menu className="w-5 h-5 text-gray-700" />
               </button>
               <h1 className="ag-display text-xl font-semibold text-gray-900">Farmer Dashboard</h1>
+            </div>
+            <div className="hidden md:flex items-center gap-3 flex-1 justify-center px-4 max-w-xl">
+              <div className="w-full relative">
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                <input
+                  type="search"
+                  placeholder="Search features, pages, or actions..."
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-400)] focus:border-[var(--ag-primary-300)] placeholder:text-gray-400 text-sm"
+                />
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {/* Language selector (English / Malayalam) visible on all farmer pages */}
@@ -191,11 +210,12 @@ const Dashboard = () => {
                   <span className="text-sm truncate max-w-[16rem]" title={locationLabel}>{locationLabel}</span>
                 </div>
               )}
-              <button className="p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)]">
+              <button className="relative p-2 rounded-lg border border-[var(--ag-border)] hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)] ag-lift">
                 <Bell className="w-5 h-5 text-gray-700" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ag-pulse"></span>
               </button>
               <div className="relative">
-                <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)]">
+                <button onClick={() => setIsProfileOpen((v) => !v)} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--ag-border)] text-gray-700 hover:bg-[var(--ag-muted)] transition-all duration-200 hover:border-[var(--ag-primary-300)] ag-lift">
                   <div className="w-8 h-8 rounded-full ag-cta-gradient text-white flex items-center justify-center overflow-hidden">
                     {user?.avatarUrl ? (
                       <img 
@@ -216,7 +236,7 @@ const Dashboard = () => {
                   <svg className={`w-4 h-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 border border-[var(--ag-border)] backdrop-blur-sm">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-1 z-50 border border-[var(--ag-border)] backdrop-blur-sm ag-lift">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full ag-cta-gradient text-white flex items-center justify-center overflow-hidden">

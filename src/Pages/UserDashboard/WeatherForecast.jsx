@@ -26,24 +26,24 @@ const WeatherIcon = ({ icon, size = 'w-8 h-8' }) => {
 
 const WeatherCard = ({ title, children, className = "" }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
+    initial={{ opacity: 0, y: 14 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.4 }}
-    className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 ${className}`}
+    transition={{ duration: 0.5, ease: [0.22,0.61,0.36,1] }}
+    className={`ag-card rounded-2xl p-6 hover:shadow-xl transition-all duration-500 ${className}`}
   >
-    <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
+    <h3 className="ag-subhead font-semibold text-gray-900 mb-4">{title}</h3>
     {children}
   </motion.div>
 );
 
 const CurrentWeatherCard = ({ current, location }) => (
-  <WeatherCard title="Current Weather" className="bg-gradient-to-br from-blue-50 to-blue-100">
+  <WeatherCard title="Current Weather" className="ag-sky-soft">
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
         <WeatherIcon icon={current.icon} size="w-16 h-16" />
         <div>
           <div className="text-4xl font-bold text-gray-900">{current.temperature}°C</div>
-          <div className="text-lg text-gray-600 capitalize">{current.description}</div>
+          <div className="ag-subhead text-gray-600 capitalize">{current.description}</div>
         </div>
       </div>
       <div className="text-right text-sm text-gray-600">
@@ -53,31 +53,31 @@ const CurrentWeatherCard = ({ current, location }) => (
     </div>
     
     <div className="grid grid-cols-2 gap-4">
-      <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg">
+      <div className="flex items-center gap-3 p-3 bg-white/60 rounded-lg">
         <Droplets className="w-5 h-5 text-blue-600" />
         <div>
-          <div className="text-sm text-gray-600">Humidity</div>
+          <div className="ag-label text-gray-600">Humidity</div>
           <div className="font-semibold">{current.humidity}%</div>
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg">
+      <div className="flex items-center gap-3 p-3 bg-white/60 rounded-lg">
         <CloudRain className="w-5 h-5 text-blue-600" />
         <div>
-          <div className="text-sm text-gray-600">Rainfall</div>
+          <div className="ag-label text-gray-600">Rainfall</div>
           <div className="font-semibold">{current.rainfall}</div>
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg">
+      <div className="flex items-center gap-3 p-3 bg-white/60 rounded-lg">
         <Wind className="w-5 h-5 text-blue-600" />
         <div>
-          <div className="text-sm text-gray-600">Wind</div>
+          <div className="ag-label text-gray-600">Wind</div>
           <div className="font-semibold">{current.wind} km/h</div>
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 bg-white/50 rounded-lg">
+      <div className="flex items-center gap-3 p-3 bg-white/60 rounded-lg">
         <Thermometer className="w-5 h-5 text-blue-600" />
         <div>
-          <div className="text-sm text-gray-600">Feels Like</div>
+          <div className="ag-label text-gray-600">Feels Like</div>
           <div className="font-semibold">{current.temperature}°C</div>
         </div>
       </div>
@@ -87,18 +87,18 @@ const CurrentWeatherCard = ({ current, location }) => (
 
 const ForecastCard = ({ day, temp, tempMin, rain, description, icon }) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
+    initial={{ opacity: 0, scale: 0.98 }}
     animate={{ opacity: 1, scale: 1 }}
-    transition={{ duration: 0.3 }}
-    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300"
+    transition={{ duration: 0.45, ease: [0.22,0.61,0.36,1] }}
+    className="ag-card rounded-xl p-4 hover:shadow-md transition-all duration-500"
   >
     <div className="text-center">
-      <div className="text-sm font-medium text-gray-600 mb-2">{day}</div>
+      <div className="ag-label font-medium text-gray-600 mb-2">{day}</div>
       <WeatherIcon icon={icon} size="w-8 h-8" className="mx-auto mb-2" />
       <div className="text-lg font-bold text-gray-900">{temp}°</div>
-      <div className="text-sm text-gray-600">{tempMin}°</div>
-      <div className="text-xs text-blue-600 mt-1">{rain}</div>
-      <div className="text-xs text-gray-500 mt-1 capitalize">{description}</div>
+      <div className="ag-label text-gray-600">{tempMin}°</div>
+      <div className="ag-fine text-blue-600 mt-1">{rain}</div>
+      <div className="ag-fine text-gray-500 mt-1 capitalize">{description}</div>
     </div>
   </motion.div>
 );
@@ -108,8 +108,9 @@ const AlertBanner = ({ alerts }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: -14 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22,0.61,0.36,1] }}
       className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6"
     >
       <div className="flex items-center gap-2">
@@ -241,12 +242,12 @@ const WeatherForecast = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
             <div>
-          <h2 className="text-2xl font-bold text-gray-900">🌦️ Weather Forecast</h2>
-          <p className="text-gray-600">Real-time weather data and agricultural recommendations</p>
+          <h2 className="ag-h2 font-bold text-gray-900">🌦️ Weather Forecast</h2>
+          <p className="ag-label text-gray-600">Real-time weather data and agricultural recommendations</p>
         </div>
         <button 
           onClick={fetchWeatherData}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 ag-cta-gradient text-white rounded-xl hover:brightness-105 transition-colors ag-focus-ring ag-touch"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -266,7 +267,7 @@ const WeatherForecast = () => {
       <CurrentWeatherCard current={weatherData.current} location={weatherData.location} />
 
       {/* 5-Day Forecast */}
-      <WeatherCard title="5-Day Forecast">
+      <WeatherCard title="5-Day Forecast" className="ag-sky-soft">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {weatherData.forecast.map((day, index) => (
             <ForecastCard

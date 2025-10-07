@@ -1,13 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { getSocket } from '../../services/socket';
 import authService from '../../services/authService';
 import api, { chatApi } from '../../services/api';
+import config from '../../config/config';
 
 const Chatbox = () => {
   const user = authService.getCurrentUser();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
+  const [files, setFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState([]);
   const [experts, setExperts] = useState([]);
   const [selectedExpertEmail, setSelectedExpertEmail] = useState('');
   const [conversationId, setConversationId] = useState('');
@@ -15,8 +18,14 @@ const Chatbox = () => {
   const scrollContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const [search, setSearch] = useState('');
+  const [chatSearch, setChatSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [pinnedOnly, setPinnedOnly] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [unreadByEmail, setUnreadByEmail] = useState({});
+  const [presenceByEmail, setPresenceByEmail] = useState({});
   const [lang, setLang] = useState(() => {
     try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
   });
@@ -60,6 +69,10 @@ const Chatbox = () => {
   useEffect(() => {
     const handler = (e) => setLang(e?.detail || 'en');
     window.addEventListener('langChanged', handler);
+    // ask notification permission once
+    if (window.Notification && Notification.permission === 'default') {
+      try { Notification.requestPermission(); } catch(_) {}
+    }
     return () => window.removeEventListener('langChanged', handler);
   }, []);
   const approvedEmails = new Set(
@@ -77,9 +90,20 @@ const Chatbox = () => {
       const toEmail = String(msg.toEmail || '').toLowerCase();
       const myEmail = String(user?.email || '').toLowerCase();
       const isForThisChat = peerEmail && (fromEmail === peerEmail || (fromEmail === myEmail && toEmail === peerEmail));
-      if (!isForThisChat) return;
       const inbound = fromEmail !== myEmail;
-      setMessages((m) => [...m, { ...msg, inbound }]);
+      if (!isForThisChat) {
+        // increment unread for that expert
+        if (inbound) {
+          setUnreadByEmail((m) => ({ ...m, [fromEmail]: (m[fromEmail] || 0) + 1 }));
+          // toast
+          setToasts((tlist) => [...tlist, { id: Date.now(), text: `New message from ${msg.fromEmail}` }]);
+          if (window.Notification && Notification.permission === 'granted') {
+            try { new Notification(`New message from ${msg.fromEmail}`, { body: msg.text || 'Attachment', silent: true }); } catch (_) {}
+          }
+        }
+        return;
+      }
+      setMessages((m) => [...m, { ...msg, inbound, deliveredAt: Date.now() }]);
     };
     const onTyping = (payload = {}) => {
       const fromEmail = String(payload.fromEmail || '').toLowerCase();
@@ -92,9 +116,23 @@ const Chatbox = () => {
     };
     socket.on('receive_message', onReceive);
     socket.on('typing', onTyping);
+    const onPresence = (p = {}) => {
+      const email = String(p.email || '').toLowerCase();
+      if (!email) return;
+      setPresenceByEmail((m) => ({ ...m, [email]: { online: !!p.online, lastActiveAt: p.lastActiveAt } }));
+    };
+    const onRead = (payload = {}) => {
+      const ids = new Set((payload.messageIds || []).map(String));
+      if (!ids.size) return;
+      setMessages((arr) => arr.map((m) => (ids.has(String(m._id)) ? { ...m, readAt: new Date().toISOString() } : m)));
+    };
+    socket.on('presence', onPresence);
+    socket.on('messages_read', onRead);
     return () => {
       socket.off('receive_message', onReceive);
       socket.off('typing', onTyping);
+      socket.off('presence', onPresence);
+      socket.off('messages_read', onRead);
     };
   }, [selectedExpertEmail]);
 
@@ -155,6 +193,7 @@ const Chatbox = () => {
           setMessages(hydrated);
           // Mark as read
           await chatApi.markRead(convoId).catch(() => {});
+          setUnreadByEmail((m) => ({ ...m, [email.toLowerCase()]: 0 }));
         }
       } catch (_) {}
     })();
@@ -167,21 +206,21 @@ const Chatbox = () => {
     el.scrollTop = el.scrollHeight;
   }, [messages.length]);
 
-  const send = (e) => {
+  const send = async (e) => {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() && (!files || files.length === 0)) return;
     if (!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())) return;
-    const socket = getSocket();
-    const outgoing = { toEmail: selectedExpertEmail.trim(), text: text.trim() };
-    socket.emit('send_message', outgoing, (ack) => {
-      if (ack?.success) {
-        setMessages((m) => [
-          ...m,
-          { fromUserId: user?.id, fromName: user?.name, fromEmail: user?.email, toEmail: selectedExpertEmail, text, ts: Date.now(), inbound: false }
-        ]);
+    try {
+      if (!conversationId) return;
+      const res = await chatApi.sendMessage(conversationId, { text: text.trim(), files });
+      if (res?.success && res?.message) {
+        const m = res.message;
+        setMessages((prev) => [...prev, { ...m, inbound: false }]);
         setText('');
+        setFiles([]);
+        setFilePreviews([]);
       }
-    });
+    } catch (_) {}
   };
 
   const onKeyDown = (e) => {
@@ -205,6 +244,80 @@ const Chatbox = () => {
     } catch (_) {
       return '';
     }
+  };
+
+  const formatLastSeen = (iso) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return `last seen ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } catch (_) { return ''; }
+  };
+
+  const baseUrl = useMemo(() => (config.API_URL || '').replace(/\/$/, ''), []);
+  const toAttachmentUrl = (att) => {
+    // backend serves uploads at /api/admin/uploads
+    const p = String(att?.path || ''); // e.g., uploads/filename
+    const fname = p.startsWith('uploads/') ? p.slice('uploads/'.length) : p;
+    return `${baseUrl}/admin/uploads/${fname}`;
+  };
+
+  const onFilesSelected = (e) => {
+    const newFiles = Array.from(e.target.files || []);
+    setFiles(newFiles);
+    const urls = newFiles.map((f) => ({ name: f.name, type: f.type, url: URL.createObjectURL(f) }));
+    setFilePreviews(urls);
+  };
+
+  const MessageStatus = ({ m }) => {
+    if (m.inbound) return null;
+    const delivered = Boolean(m.deliveredAt || (!m._id && m.ts));
+    const read = Boolean(m.readAt);
+    return (
+      <span className={`ml-1 text-[10px] ${read ? 'text-blue-500' : (delivered ? 'text-gray-500' : 'text-gray-400')}`}
+        title={read ? 'Read' : delivered ? 'Delivered' : 'Sent'}>
+        {read ? '✔✔' : delivered ? '✔✔' : '✔'}
+      </span>
+    );
+  };
+
+  const AttachmentView = ({ atts = [] }) => {
+    if (!atts.length) return null;
+    return (
+      <div className="mt-2 space-y-2">
+        {atts.map((a, idx) => {
+          const url = toAttachmentUrl(a);
+          if ((a.mimeType || '').startsWith('image/')) {
+            return <img key={idx} src={url} alt={a.originalName} className="max-w-[200px] rounded" />;
+          }
+          if ((a.mimeType || '').startsWith('audio/')) {
+            return <audio key={idx} src={url} controls className="w-64" />;
+          }
+          // default link (e.g., PDF)
+          return <a key={idx} href={url} target="_blank" rel="noreferrer" className="text-xs underline">{a.originalName}</a>;
+        })}
+      </div>
+    );
+  };
+
+  const doSearch = async () => {
+    if (!conversationId || !chatSearch.trim()) { setSearchResults([]); return; }
+    try {
+      const res = await chatApi.searchMessages(conversationId, chatSearch.trim());
+      setSearchResults(Array.isArray(res?.results) ? res.results : []);
+    } catch (_) { setSearchResults([]); }
+  };
+
+  const downloadPdf = async () => {
+    if (!conversationId) return;
+    try {
+      const blob = await chatApi.exportConversation(conversationId);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `conversation_${conversationId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (_) {}
   };
 
   return (
@@ -241,6 +354,7 @@ const Chatbox = () => {
               const email = String(e.email || '').toLowerCase();
               const req = myRequests.find((r) => String(r.expert?.email || '').toLowerCase() === email);
               const status = req?.status || 'none';
+              const unread = unreadByEmail[email] || 0;
               return (
                 <button
                   key={e.email}
@@ -254,7 +368,10 @@ const Chatbox = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="font-medium truncate">{e.name || e.email}</div>
-                        {time && <div className="text-[10px] text-gray-500 flex-shrink-0">{time}</div>}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {unread > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-600 text-white">{unread}</span>}
+                          {time && <div className="text-[10px] text-gray-500">{time}</div>}
+                        </div>
                       </div>
                       <div className="text-xs text-gray-600 truncate">{lastText || e.email}</div>
                       <div className="mt-1 flex items-center gap-2">
@@ -292,7 +409,27 @@ const Chatbox = () => {
       {/* Right: Conversation */}
       <div className="ag-card p-0 overflow-hidden lg:col-span-2">
         <div className="p-3 border-b border-[var(--ag-border)] bg-[var(--ag-muted)]">
-          <div className="text-sm text-gray-600">{t.chattingWith} <span className="font-medium">{selectedExpertEmail || t.selectExpert}</span></div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm text-gray-600">
+              {t.chattingWith} <span className="font-medium">{selectedExpertEmail || t.selectExpert}</span>
+              {selectedExpertEmail && (
+                <span className="ml-2 text-[10px]">
+                  {presenceByEmail[String(selectedExpertEmail).toLowerCase()]?.online ? (
+                    <span className="inline-flex items-center gap-1 text-green-600">
+                      <span className="inline-block h-2 w-2 rounded-full bg-green-500" /> Online
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">{formatLastSeen(presenceByEmail[String(selectedExpertEmail).toLowerCase()]?.lastActiveAt)}</span>
+                  )}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <input value={chatSearch} onChange={(e) => setChatSearch(e.target.value)} placeholder="Search in chat" className="text-xs px-2 py-1 border rounded" />
+              <button type="button" onClick={doSearch} className="text-xs px-2 py-1 border rounded">Search</button>
+              <button type="button" onClick={downloadPdf} className="text-xs px-2 py-1 border rounded">Export PDF</button>
+            </div>
+          </div>
           {!selectedExpertEmail && <div className="text-xs text-gray-500 mt-1">{t.selectToStart}</div>}
           {selectedExpertEmail && !approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
             <div className="text-xs text-amber-700 mt-1">{t.needApproval}</div>
@@ -300,9 +437,42 @@ const Chatbox = () => {
           {isOtherTyping && selectedExpertEmail && approvedEmails.has(selectedExpertEmail.toLowerCase()) && (
             <div className="text-xs text-[var(--ag-primary-600)] mt-1">{t.typing}</div>
           )}
+          {pinnedOnly && <div className="text-xs text-blue-600 mt-1">Showing pinned messages</div>}
+        </div>
+        {/* Pinned messages summary */}
+        {messages.some((m) => m.pinned) && (
+          <div className="px-3 py-2 border-b border-[var(--ag-border)] bg-yellow-50 text-xs text-yellow-900">
+            <div className="mb-1 flex items-center justify-between">
+              <div className="font-medium">Pinned advice</div>
+              <button className="underline" onClick={() => setPinnedOnly((v) => !v)}>{pinnedOnly ? 'Show all' : 'Show pinned only'}</button>
+            </div>
+            <div className="flex flex-col gap-1 max-h-24 overflow-y-auto">
+              {messages.filter((m) => m.pinned).slice(0, 5).map((m) => (
+                <div key={m._id || m.ts} className="truncate">{m.text || (Array.isArray(m.attachments) && m.attachments[0]?.originalName)}</div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="px-3 py-2 border-b border-[var(--ag-border)] bg-white flex items-center gap-3">
+          <label className="text-xs px-2 py-1 border rounded cursor-pointer">
+            Attach
+            <input type="file" className="hidden" multiple onChange={onFilesSelected} accept="image/*,application/pdf,audio/*" />
+          </label>
+          <label className="flex items-center gap-1 text-xs cursor-pointer">
+            <input type="checkbox" checked={pinnedOnly} onChange={(e) => setPinnedOnly(e.target.checked)} /> Pinned only
+          </label>
+          <div className="flex-1 flex gap-2 overflow-x-auto">
+            {filePreviews.map((p) => (
+              (p.type || '').startsWith('image/') ? (
+                <img key={p.url} src={p.url} alt={p.name} className="h-10 rounded" />
+              ) : (
+                <span key={p.url} className="text-[10px] px-2 py-1 bg-gray-100 rounded">{p.name}</span>
+              )
+            ))}
+          </div>
         </div>
         <div ref={scrollContainerRef} className="h-80 overflow-y-auto p-4 space-y-3 bg-[var(--ag-muted)]">
-          {messages.map((m, i) => (
+          {(pinnedOnly ? messages.filter((m) => m.pinned) : messages).map((m, i) => (
             <motion.div
               key={`${m._id || ''}-${i}`}
               initial={{ opacity: 0, y: 6 }}
@@ -310,10 +480,35 @@ const Chatbox = () => {
               className={`max-w-md px-3 py-2 rounded-2xl shadow-sm ${m.inbound ? 'bg-white border border-[var(--ag-border)]' : 'bg-[var(--ag-primary-500)] text-white ml-auto'}`}
             >
               <div className="text-xs opacity-70 mb-0.5">{m.inbound ? `${m.fromName || m.fromEmail}` : t.you}</div>
-              <div className="whitespace-pre-wrap break-words">{m.text}</div>
-              <div className={`text-[10px] mt-1 ${m.inbound ? 'text-gray-500' : 'text-white/80'} text-right`}>{formatTime(m.ts || m.createdAt)}</div>
+              {m.text && <div className="whitespace-pre-wrap break-words">{m.text}</div>}
+              {Array.isArray(m.attachments) && <AttachmentView atts={m.attachments} />}
+              <div className={`text-[10px] mt-1 ${m.inbound ? 'text-gray-500' : 'text-white/80'} flex items-center justify-end gap-2`}>
+                <button type="button" className="underline" onClick={async () => {
+                  try {
+                    if (!conversationId || !m._id) return;
+                    const res = await chatApi.pinMessage(conversationId, m._id, !m.pinned);
+                    if (res?.success) {
+                      setMessages((arr) => arr.map((x) => (x._id === m._id ? { ...x, pinned: !m.pinned } : x)));
+                    }
+                  } catch (_) {}
+                }}>{m.pinned ? 'Unpin' : 'Pin'}</button>
+                <span>{formatTime(m.ts || m.createdAt)}</span>
+                <MessageStatus m={m} />
+                {m.pinned && <span className="ml-1">📌</span>}
+              </div>
             </motion.div>
           ))}
+          {searchResults.length > 0 && (
+            <div className="mt-2">
+              <div className="text-xs text-gray-600 mb-1">Search results</div>
+              {searchResults.map((m) => (
+                <div key={m._id} className="text-xs p-2 border-b">
+                  <div className="opacity-60">{new Date(m.createdAt).toLocaleString()}</div>
+                  <div>{m.text}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <form onSubmit={send} className="p-3 border-t border-[var(--ag-border)] flex gap-2 lg:col-span-2">
           <textarea
@@ -327,6 +522,12 @@ const Chatbox = () => {
           />
           <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}>{t.send}</button>
         </form>
+      </div>
+      {/* Simple toast area */}
+      <div className="fixed bottom-4 right-4 space-y-2">
+        {toasts.slice(-3).map((t) => (
+          <div key={t.id} className="bg-black/80 text-white text-xs px-3 py-2 rounded shadow">{t.text}</div>
+        ))}
       </div>
     </div>
   );

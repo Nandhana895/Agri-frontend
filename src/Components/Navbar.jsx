@@ -75,12 +75,12 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/90 border-b border-[var(--ag-border)] shadow-sm">
+    <nav className="ag-navbar-gradient backdrop-blur-md supports-[backdrop-filter]:bg-white/90 border-b border-[var(--ag-border)] shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center ag-cta-gradient text-white">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center ag-cta-gradient text-white shadow-sm">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
               </svg>
@@ -90,10 +90,10 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Home</a>
-            <a href="#services" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Solutions</a>
-            <a href="#about" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">About</a>
-            <a href="#contact" className="text-gray-700 hover:text-green-600 font-medium transition-colors duration-200">Contact</a>
+            <a href="#home" className="text-gray-700 hover:text-[var(--ag-primary-700)] font-medium transition-colors duration-300">Home</a>
+            <a href="#services" className="text-gray-700 hover:text-[var(--ag-primary-700)] font-medium transition-colors duration-300">Solutions</a>
+            <a href="#about" className="text-gray-700 hover:text-[var(--ag-primary-700)] font-medium transition-colors duration-300">About</a>
+            <a href="#contact" className="text-gray-700 hover:text-[var(--ag-primary-700)] font-medium transition-colors duration-300">Contact</a>
             {isAuthenticated && locationLabel && (
               <div className="flex items-center text-gray-600 gap-2">
                 <svg className="w-4 h-4 text-[var(--ag-primary-600)]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -108,13 +108,13 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
               <>
                 <button 
                   onClick={onShowLogin}
-                  className="text-gray-700 hover:text-green-600 font-medium px-4 py-2 rounded-lg border border-gray-300 hover:border-green-600 transition-colors"
+                  className="text-gray-700 hover:text-[var(--ag-primary-700)] font-medium px-4 py-2 rounded-xl border border-gray-300 hover:border-[var(--ag-primary-700)] transition-colors ag-touch ag-focus-ring"
                 >
                   Request Quote
                 </button>
                 <button 
                   onClick={onShowSignup}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                  className="ag-cta-gradient hover:brightness-105 text-white px-6 py-2 rounded-xl transition-all duration-300 font-medium shadow-md hover:shadow-lg ag-touch ag-focus-ring"
                 >
                   Get Started
                 </button>
@@ -124,10 +124,10 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="flex items-center space-x-3 text-gray-700 hover:text-[var(--ag-primary-600)] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-200)] focus:ring-opacity-50 rounded-lg px-2 py-1"
+                  className="flex items-center space-x-3 text-gray-700 hover:text-[var(--ag-primary-700)] transition-all duration-300 focus:outline-none ag-focus-ring rounded-xl px-2 py-1"
                 >
                   {/* Profile Picture */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ag-cta-gradient overflow-hidden">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm ag-cta-gradient overflow-hidden shadow">
                     {currentUser?.avatarUrl ? (
                       <img 
                         src={getProfileImageUrl(currentUser.avatarUrl)} 
@@ -158,7 +158,7 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
 
                 {/* Profile Dropdown */}
                 {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-gray-200 backdrop-blur-sm">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-200 backdrop-blur-sm ag-texture-soil">
                     <button
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
@@ -166,7 +166,7 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
                           onShowProfileModal();
                         }
                       }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] transition-colors"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] transition-colors ag-touch"
                     >
                       <div className="flex items-center space-x-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +177,7 @@ const Navbar = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout, onShowPr
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] transition-colors"
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[var(--ag-muted)] transition-colors ag-touch"
                     >
                       <div className="flex items-center space-x-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
