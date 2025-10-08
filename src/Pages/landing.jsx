@@ -1,29 +1,8 @@
 import React, { useState } from 'react';
 import Navbar from '../Components/Navbar';
+import PredictionForm from '../Components/PredictionForm';
 
 const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    farmSize: '',
-    primaryCrops: '',
-    projectDetails: ''
-  });
-
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -345,204 +324,75 @@ const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
       </section>
 
 
-      {/* Contact Section */}
-      <section id="contact" className="py-20 bg-white">
+      {/* AI Prediction Section */}
+      <section id="contact" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Information */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Try Our AI-Powered Agricultural Assistant
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Get instant, intelligent recommendations for crops, soil analysis, and fertilizers using our advanced machine learning models.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            {/* Contact Info */}
             <div className="space-y-8">
-              <div>
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                  Get in Touch
-                </h2>
-                <p className="text-xl text-gray-600">
-                  Ready to transform your agricultural operations? Contact our experts for a personalized consultation.
-                </p>
+              {/* Phone Support */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Phone Support</h3>
+                    <p className="text-gray-600">Sales: +1 (555) 123-4567</p>
+                    <p className="text-gray-600">Support: +1 (555) 987-6543</p>
+                    <p className="text-gray-600">Emergency: +1 (555) 246-8101</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Contact Cards */}
-              <div className="space-y-6">
-                {/* Corporate Headquarters */}
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Corporate Headquarters</h3>
-                      <p className="text-gray-600">AgriSense Innovation Center</p>
-                      <p className="text-gray-600">2450 Agricultural Boulevard</p>
-                      <p className="text-gray-600">Green Valley, CA 95066</p>
-                    </div>
+              {/* Email Support */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Support</h3>
+                    <p className="text-gray-600">Sales: sales@agrisense.com</p>
+                    <p className="text-gray-600">Support: support@agrisense.com</p>
+                    <p className="text-gray-600">Partnerships: partners@agrisense.com</p>
                   </div>
                 </div>
+              </div>
 
-                {/* Direct Contact */}
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Direct Contact</h3>
-                      <p className="text-gray-600">Phone: +1 (555) 123-AGRI</p>
-                      <p className="text-gray-600">Toll-Free: 1-800-AGRIGROW</p>
-                      <p className="text-gray-600">Emergency: +1 (555) 911-FARM</p>
-                    </div>
+              {/* Business Hours */}
+              <div className="bg-gray-50 rounded-2xl p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                </div>
-
-                {/* Email Support */}
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Support</h3>
-                      <p className="text-gray-600">Sales: sales@agrisense.com</p>
-                      <p className="text-gray-600">Support: support@agrisense.com</p>
-                      <p className="text-gray-600">Partnerships: partners@agrisense.com</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Business Hours */}
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h3>
-                      <p className="text-gray-600">Monday - Friday: 6AM - 8PM PST</p>
-                      <p className="text-gray-600">Saturday: 8AM - 6PM PST</p>
-                      <p className="text-gray-600 font-semibold text-green-600">24/7 Emergency Support Available</p>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h3>
+                    <p className="text-gray-600">Monday - Friday: 6AM - 8PM PST</p>
+                    <p className="text-gray-600">Saturday: 8AM - 6PM PST</p>
+                    <p className="text-gray-600 font-semibold text-green-600">24/7 Emergency Support Available</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Contact Form */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Start Your Agricultural Transformation</h3>
-              <p className="text-gray-600 mb-6">
-                Tell us about your farming needs and goals. Our experts will create a customized solution for your operation.
-              </p>
-              
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="john@farmstead.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="+1 (555) 000-0000"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Farm Size</label>
-                    <input
-                      type="text"
-                      name="farmSize"
-                      value={formData.farmSize}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="e.g., 1,250 acres"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Crops</label>
-                    <input
-                      type="text"
-                      name="primaryCrops"
-                      value={formData.primaryCrops}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      placeholder="e.g., Corn, Soybeans, Wheat"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Project Details</label>
-                  <textarea
-                    name="projectDetails"
-                    value={formData.projectDetails}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Describe your current challenges, goals, and how we can help transform your agricultural operations..."
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-lg font-semibold text-lg transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  Schedule Free Consultation
-                </button>
-
-                <p className="text-sm text-gray-500 text-center">
-                  By submitting this form, you agree to our privacy policy and terms of service.
-                </p>
-              </form>
-              </div>
+            {/* Prediction Form */}
+            <PredictionForm />
           </div>
         </div>
       </section>
