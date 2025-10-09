@@ -26,6 +26,11 @@ const Chatbox = () => {
   const [toasts, setToasts] = useState([]);
   const [unreadByEmail, setUnreadByEmail] = useState({});
   const [presenceByEmail, setPresenceByEmail] = useState({});
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+  const [recordingInterval, setRecordingInterval] = useState(null);
   const [lang, setLang] = useState(() => {
     try { return localStorage.getItem('ag_lang') || 'en'; } catch(_) { return 'en'; }
   });
@@ -45,7 +50,12 @@ const Chatbox = () => {
       typing: 'typing…',
       you: 'You',
       typeMsg: 'Type a message',
-      send: 'Send'
+      send: 'Send',
+      recordVoice: 'Record Voice',
+      stopRecording: 'Stop Recording',
+      recording: 'Recording...',
+      uploadAudio: 'Uploading audio...',
+      cancelRecording: 'Cancel'
     },
     ml: {
       experts: 'വിദഗ്ധർ',
@@ -62,7 +72,12 @@ const Chatbox = () => {
       typing: 'ടൈപ്പിംഗ്…',
       you: 'നിങ്ങൾ',
       typeMsg: 'സന്ദേശം ടൈപ്പ് ചെയ്യുക',
-      send: 'അയക്കുക'
+      send: 'അയക്കുക',
+      recordVoice: 'വോയ്സ് റെക്കോർഡ്',
+      stopRecording: 'റെക്കോർഡിംഗ് നിർത്തുക',
+      recording: 'റെക്കോർഡിംഗ്...',
+      uploadAudio: 'ഓഡിയോ അപ്ലോഡ് ചെയ്യുന്നു...',
+      cancelRecording: 'റദ്ദാക്കുക'
     }
   }[lang];
 
@@ -75,6 +90,116 @@ const Chatbox = () => {
     }
     return () => window.removeEventListener('langChanged', handler);
   }, []);
+
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        uploadAudioMessage(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setAudioChunks(chunks);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      // Start timer
+      const interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      setRecordingInterval(interval);
+
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setToasts(prev => [...prev, { id: Date.now(), text: 'Microphone access denied' }]);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+        setRecordingInterval(null);
+      }
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+        setRecordingInterval(null);
+      }
+      setAudioChunks([]);
+      setRecordingTime(0);
+    }
+  };
+
+  const uploadAudioMessage = async (audioBlob) => {
+    if (!conversationId || !selectedExpertEmail) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'voice-message.webm');
+      formData.append('conversationId', conversationId);
+      formData.append('text', ''); // Optional text with voice message
+
+      const response = await fetch(`${config.API_URL}/chat/upload-audio`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Add the message to local state immediately
+        setMessages(prev => [...prev, {
+          ...result.message,
+          inbound: false,
+          fromName: user?.name || user?.email
+        }]);
+        setText('');
+        setToasts(prev => [...prev, { id: Date.now(), text: 'Voice message sent' }]);
+      } else {
+        setToasts(prev => [...prev, { id: Date.now(), text: result.message || 'Failed to send voice message' }]);
+      }
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+      setToasts(prev => [...prev, { id: Date.now(), text: 'Failed to send voice message' }]);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingInterval) {
+        clearInterval(recordingInterval);
+      }
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+      }
+    };
+  }, [recordingInterval, mediaRecorder, isRecording]);
   const approvedEmails = new Set(
     myRequests
       .filter((r) => r.status === 'approved' && r.expert?.email)
@@ -518,10 +643,58 @@ const Chatbox = () => {
             placeholder={t.typeMsg}
             rows={1}
             className="flex-1 px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)] resize-none"
-            disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}
+            disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase()) || isRecording}
           />
-          <button className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}>{t.send}</button>
+          
+          {/* Voice Recording Button */}
+          {!isRecording ? (
+            <button
+              type="button"
+              onClick={startRecording}
+              className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-1"
+              disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase())}
+              title={t.recordVoice}
+            >
+              🎤
+            </button>
+          ) : (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-1"
+                title={t.stopRecording}
+              >
+                ⏹️
+              </button>
+              <button
+                type="button"
+                onClick={cancelRecording}
+                className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 flex items-center gap-1"
+                title={t.cancelRecording}
+              >
+                ❌
+              </button>
+            </div>
+          )}
+          
+          <button 
+            type="submit"
+            className="px-4 py-2 bg-[var(--ag-primary-500)] text-white rounded-lg hover:bg-[var(--ag-primary-600)]" 
+            disabled={!selectedExpertEmail || !approvedEmails.has(selectedExpertEmail.toLowerCase()) || isRecording}
+          >
+            {t.send}
+          </button>
         </form>
+        
+        {/* Recording Indicator */}
+        {isRecording && (
+          <div className="px-3 py-2 bg-red-50 border-t border-red-200 flex items-center gap-2 text-red-700">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">{t.recording}</span>
+            <span className="text-sm">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
+          </div>
+        )}
       </div>
       {/* Simple toast area */}
       <div className="fixed bottom-4 right-4 space-y-2">

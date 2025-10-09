@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Navbar from '../Components/Navbar';
-import PredictionForm from '../Components/PredictionForm';
 
 const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
 
@@ -324,23 +323,22 @@ const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
       </section>
 
 
-      {/* AI Prediction Section */}
+      {/* Contact Section */}
       <section id="contact" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Try Our AI-Powered Agricultural Assistant
+              Get in Touch
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get instant, intelligent recommendations for crops, soil analysis, and fertilizers using our advanced machine learning models.
+              Ready to transform your agricultural operations? Contact our team of experts for personalized solutions and support.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Contact Info */}
-            <div className="space-y-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-8">
               {/* Phone Support */}
-              <div className="bg-gray-50 rounded-2xl p-6">
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,7 +355,7 @@ const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
               </div>
 
               {/* Email Support */}
-              <div className="bg-gray-50 rounded-2xl p-6">
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,7 +372,7 @@ const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
               </div>
 
               {/* Business Hours */}
-              <div className="bg-gray-50 rounded-2xl p-6">
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,9 +388,6 @@ const Landing = ({ onShowLogin, onShowSignup, isAuthenticated, onLogout }) => {
                 </div>
               </div>
             </div>
-
-            {/* Prediction Form */}
-            <PredictionForm />
           </div>
         </div>
       </section>

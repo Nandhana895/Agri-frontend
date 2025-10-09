@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import styled from 'styled-components';
 import api from '../../services/api';
 
 const SoilAnalyzer = () => {
@@ -226,6 +227,64 @@ const SoilAnalyzer = () => {
     && !validateField('phosphorus', form.phosphorus)
     && !validateField('potassium', form.potassium);
 
+  // Styled Components for PDF Upload
+  const StyledWrapper = styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 20px 0;
+    
+    .file-upload-form {
+      width: fit-content;
+      height: fit-content;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .file-upload-label input {
+      display: none;
+    }
+    .file-upload-label svg {
+      height: 50px;
+      fill: #22c55e;
+      margin-bottom: 20px;
+    }
+    .file-upload-label {
+      cursor: pointer;
+      background-color: #dcfce7;
+      padding: 30px 70px;
+      border-radius: 40px;
+      border: 2px dashed #22c55e;
+      box-shadow: 0px 0px 200px -50px rgba(34, 197, 94, 0.3);
+      transition: all 0.3s ease;
+    }
+    .file-upload-label:hover {
+      background-color: #bbf7d0;
+    }
+    .file-upload-design {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .file-upload-design p {
+      color: #16a34a;
+      font-weight: 500;
+    }
+    .browse-button {
+      background-color: #22c55e;
+      padding: 5px 15px;
+      border-radius: 10px;
+      color: white;
+      transition: all 0.3s;
+    }
+    .browse-button:hover {
+      background-color: #16a34a;
+    }
+  `;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -404,32 +463,41 @@ const SoilAnalyzer = () => {
             {ocrError && (
               <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm mb-3">{ocrError}</div>
             )}
-            <div
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragActive ? 'border-[var(--ag-primary-500)] bg-[var(--ag-primary-50)]' : 'border-[var(--ag-border)] bg-white'}`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => handleOcrUpload(e.target.files?.[0] || null)}
-              />
-              <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-3-3m3 3l3-3M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
-              <p className="text-sm text-gray-700">{t.dragHere}</p>
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-2 px-3 py-1.5 bg-[var(--ag-primary-600)] text-white rounded-md text-sm hover:bg-[var(--ag-primary-700)] disabled:opacity-50 shadow" disabled={ocrLoading}>{t.browse}</button>
-              <p className="text-xs text-gray-500 mt-2">{t.pdfOnly}</p>
-              {ocrLoading && (
-                <div className="mt-3">
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div className="h-2 bg-[var(--ag-primary-500)]" style={{ width: `${uploadProgress}%` }} />
+            <StyledWrapper>
+              <form className="file-upload-form">
+                <label 
+                  htmlFor="pdf-file" 
+                  className="file-upload-label"
+                  onDrop={onDrop}
+                  onDragOver={onDragOver}
+                  onDragLeave={onDragLeave}
+                >
+                  <div className="file-upload-design">
+                    <svg viewBox="0 0 640 512" height="1em">
+                      <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z" />
+                    </svg>
+                    <p>Drag and Drop</p>
+                    <p>or</p>
+                    <span className="browse-button">Browse file</span>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">{t.uploading} {uploadProgress}%</p>
+                  <input 
+                    id="pdf-file" 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="application/pdf"
+                    onChange={(e) => handleOcrUpload(e.target.files?.[0] || null)}
+                  />
+                </label>
+              </form>
+            </StyledWrapper>
+            {ocrLoading && (
+              <div className="mt-3">
+                <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--ag-primary-500)]" style={{ width: `${uploadProgress}%` }} />
                 </div>
-              )}
-            </div>
+                <p className="text-xs text-gray-600 mt-1">{t.uploading} {uploadProgress}%</p>
+              </div>
+            )}
           </div>
           {ocrSummary && (
             <div className="mt-6">
