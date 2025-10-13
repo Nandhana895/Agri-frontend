@@ -145,7 +145,7 @@ const ManageProfileModal = ({ isOpen, onClose, user }) => {
         const me = await profileApi.me();
         if (me?.success) {
           try { 
-            localStorage.setItem('agrisense_user', JSON.stringify(me.user)); 
+            localStorage.setItem(config.USER_KEY, JSON.stringify(me.user)); 
             // Update the user in the parent component
             window.dispatchEvent(new CustomEvent('userUpdated', { detail: me.user }));
           } catch (_) {}
@@ -360,7 +360,10 @@ const ManageProfileModal = ({ isOpen, onClose, user }) => {
                     />
                   ) : user?.avatarUrl ? (
                     <img 
-                      src={user.avatarUrl} 
+                      src={(() => { 
+                        const u = user.avatarUrl || ''; 
+                        return u.startsWith('http') ? u : `${new URL(config.API_URL).origin}${u}`; 
+                      })()} 
                       alt="current avatar" 
                       className="w-full h-full object-cover" 
                     />

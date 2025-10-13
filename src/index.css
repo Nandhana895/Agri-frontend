@@ -226,3 +226,165 @@ body {
 
 /* Min touch target */
 .ag-touch { min-height: 44px; min-width: 44px; }
+
+/* Agricultural Professional Enhancements */
+
+/* Smooth gradient background for agricultural theme */
+.ag-agri-bg {
+  background: linear-gradient(to bottom right, #f0fdf4, #dcfce7, #d1fae5);
+  background-attachment: fixed;
+}
+
+/* Enhanced card with agricultural theme */
+.ag-agri-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1), 0 2px 4px -1px rgba(16, 185, 129, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ag-agri-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.15), 0 10px 10px -5px rgba(16, 185, 129, 0.08);
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Agricultural pattern overlay */
+.ag-pattern-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.ag-pattern-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(30deg, transparent 49%, rgba(16, 185, 129, 0.03) 49%, rgba(16, 185, 129, 0.03) 51%, transparent 51%),
+    linear-gradient(-30deg, transparent 49%, rgba(16, 185, 129, 0.03) 49%, rgba(16, 185, 129, 0.03) 51%, transparent 51%);
+  background-size: 30px 30px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Emerald glow effect */
+.ag-emerald-glow {
+  position: relative;
+}
+
+.ag-emerald-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  filter: blur(10px);
+}
+
+.ag-emerald-glow:hover::after {
+  opacity: 0.3;
+}
+
+/* Leaf animation */
+@keyframes leaf-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.ag-leaf-sway {
+  animation: leaf-sway 3s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Grow animation */
+@keyframes ag-grow {
+  from { transform: scale(0.95); opacity: 0.8; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ag-grow {
+  animation: ag-grow 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Shimmer effect for agricultural elements */
+@keyframes ag-shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.ag-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(16, 185, 129, 0.2),
+    transparent
+  );
+  background-size: 1000px 100%;
+  animation: ag-shimmer 2s infinite;
+}
+
+/* Enhanced focus states for accessibility */
+.ag-focus:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+/* Gradient text utility */
+.ag-gradient-text {
+  background: linear-gradient(135deg, #059669, #10b981, #34d399);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Agricultural info boxes */
+.ag-info-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+  border-left: 4px solid #10b981;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Seasonal indicators */
+.ag-season-spring { background: linear-gradient(135deg, #a7f3d0, #6ee7b7); }
+.ag-season-summer { background: linear-gradient(135deg, #fde047, #facc15); }
+.ag-season-autumn { background: linear-gradient(135deg, #fdba74, #fb923c); }
+.ag-season-winter { background: linear-gradient(135deg, #bfdbfe, #93c5fd); }
+
+/* Professional scrollbar for agricultural theme */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0fdf4;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981, #059669);
+  border-radius: 10px;
+  border: 2px solid #f0fdf4;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #059669, #047857);
+}
+
+/* Selection color */
+::selection {
+  background-color: #10b981;
+  color: white;
+}
+
+::-moz-selection {
+  background-color: #10b981;
+  color: white;
+}
