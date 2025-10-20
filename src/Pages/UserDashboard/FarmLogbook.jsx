@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import FieldSelector from '../../Components/FieldSelector';
 
 const FarmLogbook = () => {
   const [logs, setLogs] = useState([]);
@@ -13,6 +14,7 @@ const FarmLogbook = () => {
   const [filters, setFilters] = useState({
     activityType: '',
     crop: '',
+    fieldId: '',
     startDate: '',
     endDate: ''
   });
@@ -21,6 +23,7 @@ const FarmLogbook = () => {
     date: new Date().toISOString().split('T')[0],
     activityType: '',
     crop: '',
+    fieldId: '',
     notes: ''
   });
 
@@ -78,6 +81,7 @@ const FarmLogbook = () => {
           date: new Date().toISOString().split('T')[0],
           activityType: '',
           crop: '',
+          fieldId: '',
           notes: ''
         });
         fetchLogs();
@@ -147,6 +151,7 @@ const FarmLogbook = () => {
     setFilters({
       activityType: '',
       crop: '',
+      fieldId: '',
       startDate: '',
       endDate: ''
     });
@@ -248,7 +253,7 @@ const FarmLogbook = () => {
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Filter Logs</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Activity Type</label>
             <select
@@ -271,6 +276,15 @@ const FarmLogbook = () => {
               onChange={(e) => setFilters({ ...filters, crop: e.target.value })}
               placeholder="Filter by crop..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Field</label>
+            <FieldSelector
+              selectedFieldId={filters.fieldId}
+              onFieldChange={(fieldId) => setFilters({ ...filters, fieldId })}
+              showAllOption={true}
             />
           </div>
 
@@ -462,6 +476,15 @@ const FarmLogbook = () => {
                   </div>
 
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Field (Optional)</label>
+                    <FieldSelector
+                      selectedFieldId={newLog.fieldId}
+                      onFieldChange={(fieldId) => setNewLog({ ...newLog, fieldId })}
+                      showAllOption={false}
+                    />
+                  </div>
+
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
                     <textarea
                       value={newLog.notes}
@@ -556,6 +579,15 @@ const FarmLogbook = () => {
                       onChange={(e) => setEditingLog({ ...editingLog, crop: e.target.value })}
                       placeholder="e.g., Rice, Wheat, Tomato"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Field (Optional)</label>
+                    <FieldSelector
+                      selectedFieldId={editingLog.fieldId || ''}
+                      onFieldChange={(fieldId) => setEditingLog({ ...editingLog, fieldId })}
+                      showAllOption={false}
                     />
                   </div>
 

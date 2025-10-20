@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, UserCheck, UserX, UserPlus, Activity, TrendingUp, Shield, Calendar, MapPin, Bell, ChevronDown, LogOut, User as UserIcon, Leaf } from 'lucide-react';
+import { Users, UserCheck, UserX, UserPlus, Activity, TrendingUp, Shield, Calendar, MapPin, ChevronDown, LogOut, User as UserIcon, Leaf } from 'lucide-react';
 import authService from '../services/authService';
 import api from '../services/api';
 import AdminSidebar from '../Components/AdminSidebar';
@@ -10,42 +10,80 @@ import UserManagement from '../Components/UserManagement';
 import CropManagement from '../Components/CropManagement';
 import SowingCalendarManagement from '../Components/SowingCalendarManagement';
 import SchemeManagement from '../Components/SchemeManagement';
+import '../styles/dashboard.css';
 
-const StatCard = ({ label, value, icon: Icon, trend, color = 'emerald' }) => {
-  const colorClasses = {
-    emerald: 'from-green-500 to-emerald-600',
-    blue: 'from-blue-500 to-cyan-600',
-    purple: 'from-purple-500 to-pink-600',
-    orange: 'from-orange-500 to-amber-600',
-    red: 'from-red-500 to-rose-600',
-    teal: 'from-teal-500 to-emerald-600'
+const StatCard = ({ label, value, icon: Icon, trend, color = 'emerald', subtitle, description }) => {
+  const colorConfig = {
+    emerald: {
+      bg: 'from-emerald-50 to-green-50',
+      border: 'border-emerald-200/60',
+      iconBg: 'from-emerald-500 to-green-600',
+      iconShadow: 'shadow-emerald-500/30',
+      text: 'text-emerald-700',
+      value: 'text-emerald-900',
+      trend: 'text-emerald-600'
+    },
+    blue: {
+      bg: 'from-blue-50 to-cyan-50',
+      border: 'border-blue-200/60',
+      iconBg: 'from-blue-500 to-cyan-600',
+      iconShadow: 'shadow-blue-500/30',
+      text: 'text-blue-700',
+      value: 'text-blue-900',
+      trend: 'text-blue-600'
+    },
+    purple: {
+      bg: 'from-purple-50 to-pink-50',
+      border: 'border-purple-200/60',
+      iconBg: 'from-purple-500 to-pink-600',
+      iconShadow: 'shadow-purple-500/30',
+      text: 'text-purple-700',
+      value: 'text-purple-900',
+      trend: 'text-purple-600'
+    },
+    amber: {
+      bg: 'from-amber-50 to-yellow-50',
+      border: 'border-amber-200/60',
+      iconBg: 'from-amber-500 to-yellow-600',
+      iconShadow: 'shadow-amber-500/30',
+      text: 'text-amber-700',
+      value: 'text-amber-900',
+      trend: 'text-amber-600'
+    }
   };
+
+  const config = colorConfig[color];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 p-6 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group"
+      className={`relative overflow-hidden bg-white rounded-lg border ${config.border} p-4 hover:shadow-md hover:shadow-slate-500/10 transition-all duration-300 group`}
     >
-      {/* Decorative gradient background */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-100/20 to-transparent rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
-      
-      <div className="relative flex items-center justify-between">
-        <div>
-          <div className="text-sm font-medium text-emerald-700 mb-2">{label}</div>
-          <div className="text-3xl font-bold text-gray-900">{value}</div>
-          {trend && (
-            <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              <TrendingUp className={`w-3 h-3 ${trend < 0 ? 'rotate-180' : ''}`} />
-              <span>{Math.abs(trend)}% from last month</span>
-            </div>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className={`text-xs font-medium ${config.text} mb-0.5`}>{label}</div>
+          <div className={`text-2xl font-bold ${config.value} mb-1`}>{value}</div>
+          {subtitle && (
+            <div className={`text-[11px] ${config.text} opacity-75`}>{subtitle}</div>
           )}
         </div>
-        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${colorClasses[color]} text-white flex items-center justify-center shadow-lg shadow-${color}-500/30 group-hover:scale-110 transition-transform duration-300`}>
-          <Icon className="w-7 h-7" strokeWidth={2.5} />
+        <div className={`w-10 h-10 rounded-md bg-gradient-to-br ${config.iconBg} text-white flex items-center justify-center shadow-lg ${config.iconShadow} group-hover:scale-105 transition-transform duration-300`}>
+          <Icon className="w-5 h-5" strokeWidth={2} />
         </div>
       </div>
+      
+      {trend && (
+        <div className={`flex items-center gap-1 text-[11px] font-medium ${config.trend}`}>
+          <TrendingUp className={`w-3 h-3 ${trend < 0 ? 'rotate-180' : ''}`} />
+          <span>{trend > 0 ? '+' : ''}{trend}% from last month</span>
+        </div>
+      )}
+      
+      {description && (
+        <div className="mt-2 text-[11px] text-slate-500">{description}</div>
+      )}
     </motion.div>
   );
 };
@@ -137,74 +175,67 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex relative overflow-hidden">
-      {/* Subtle Agricultural Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <pattern id="admin-agricultural-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M20 5 L20 15 M15 10 L25 10 M20 25 L20 35 M15 30 L25 30" stroke="#10b981" strokeWidth="0.5" fill="none"/>
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#admin-agricultural-pattern)" />
-        </svg>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 flex">
 
       <AdminSidebar active={activeTab} onSelect={setActiveTab} />
 
       <div className="flex-1 relative">
-        {/* Enhanced Admin Header */}
-        <header className="bg-white/95 backdrop-blur-xl border-b border-emerald-200/50 sticky top-0 z-40 shadow-lg shadow-emerald-500/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20">
+        {/* Professional Agricultural Header */}
+        <header className="bg-white/98 backdrop-blur-xl border-b border-emerald-200/60 sticky top-0 z-40 shadow-xl shadow-emerald-500/10">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 h-18">
             <div className="flex items-center justify-between h-full">
-              {/* Left Section */}
+              {/* Left Section - Professional Agricultural Branding */}
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/0 to-white/20"></div>
-                    <Shield className="w-7 h-7 relative z-10" strokeWidth={2.5} />
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 text-white flex items-center justify-center shadow-xl shadow-emerald-500/40 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                      <Leaf className="w-7 h-7" strokeWidth={2.5} />
+                    </div>
+                    <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-xl"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-300 to-green-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-lg"></div>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-green-700 via-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                      Admin Control Panel
-                    </h1>
-                    <p className="text-xs text-emerald-600 font-medium">AgriSense Management System</p>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 via-green-700 to-teal-700 bg-clip-text text-transparent">AgriSense Pro</h1>
+                    <p className="text-sm text-emerald-600 font-semibold">Agricultural Management Platform</p>
                   </div>
                 </div>
               </div>
 
-              {/* Right Section */}
-              <div className="flex items-center gap-3">
-                {/* Current date */}
-                <div className="hidden md:flex items-center gap-4 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/50">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-emerald-600" />
-                    <span className="text-xs font-medium text-emerald-800">
-                      {now.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
+
+              {/* Right Section - Professional Agricultural Controls */}
+              <div className="flex items-center gap-4">
+                {/* Enhanced Weather Widget */}
+                <div className="hidden md:flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 border-2 border-sky-200/60 shadow-lg shadow-sky-500/10">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-bold text-slate-900">28°C</div>
+                    <div className="text-sky-600 font-medium">Sunny</div>
+                  </div>
+                  <div className="text-xs text-sky-500">
+                    <div>Humidity: 65%</div>
+                    <div>Wind: 12 km/h</div>
                   </div>
                 </div>
 
-                {/* Notifications */}
-                <button className="relative p-2.5 rounded-xl border-2 border-emerald-200/50 bg-white hover:bg-emerald-50 transition-all duration-200 group">
-                  <Bell className="w-5 h-5 text-emerald-700 group-hover:scale-110 transition-transform" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-red-500 to-pink-600 rounded-full text-white text-xs font-bold flex items-center justify-center shadow-lg shadow-red-500/50 animate-pulse">
-                    2
-                  </span>
-                </button>
 
-                {/* Profile Dropdown */}
+                {/* Enhanced Profile */}
                 <div className="relative">
                   <button
                     onClick={() => setProfileOpen((v) => !v)}
-                    className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-xl border-2 border-emerald-200/50 bg-white text-emerald-800 hover:bg-emerald-50 transition-all duration-200 group"
+                    className="flex items-center gap-3 pl-3 pr-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 border-2 border-emerald-200/60 transition-all duration-300 group shadow-lg shadow-emerald-500/10"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-2 ring-white">
-                      <Shield className="w-5 h-5" strokeWidth={2.5} />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 via-green-600 to-teal-600 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'A'}
                     </div>
                     <div className="hidden sm:block text-left">
                       <div className="text-sm font-bold text-emerald-900">{user?.name || 'Administrator'}</div>
-                      <div className="text-xs text-emerald-600">Admin Access</div>
+                      <div className="text-xs text-emerald-600 font-semibold">System Administrator</div>
                     </div>
-                    <ChevronDown className={`hidden sm:block w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-emerald-500 transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {/* Profile Dropdown Menu */}
@@ -274,132 +305,131 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8 space-y-8 relative z-10">
+        {/* Professional Agricultural Hero Section */}
+        {/* Removed empty overview spacer to reduce unused space */}
+
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-6 relative z-10">
           {activeTab === 'overview' && (
           <>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 px-4 sm:px-0">
-            <StatCard label="Total Users" value={stats.totalUsers} icon={Users} color="emerald" trend={12} />
-            <StatCard label="Admins" value={stats.adminCount} icon={Shield} color="purple" />
-            <StatCard label="New Users (7d)" value={stats.newUsers7d} icon={UserPlus} color="blue" trend={8} />
-            <StatCard label="Active Users" value={liveStats.activeUsers} icon={UserCheck} color="teal" />
-            <StatCard label="Blocked Users" value={stats.blockedUsers} icon={UserX} color="red" />
-            <StatCard label="Inactive Users" value={stats.inactiveUsers} icon={Activity} color="orange" />
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 px-6 lg:px-0">
+            <StatCard 
+              label="Total Farmers" 
+              value={stats.totalUsers || 0} 
+              icon={Users} 
+              color="emerald" 
+              trend={12}
+              subtitle="Registered farmers"
+              description="Active agricultural community"
+            />
+            <StatCard 
+              label="Active Fields" 
+              value={liveStats.activeUsers || 0} 
+              icon={() => (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              )} 
+              color="blue" 
+              trend={8}
+              subtitle="Fields under cultivation"
+              description="Currently monitored fields"
+            />
+            <StatCard 
+              label="Expert Queries" 
+              value={liveStats.activeQueries || 0} 
+              icon={() => (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              )} 
+              color="purple" 
+              trend={15}
+              subtitle="Pending responses"
+              description="Farmer questions awaiting expert advice"
+            />
+            <StatCard 
+              label="System Health" 
+              value="98%" 
+              icon={() => (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )} 
+              color="amber" 
+              trend={2}
+              subtitle="Platform uptime"
+              description="All agricultural systems operational"
+            />
           </div>
 
+          {/* Analytics, weather and alerts removed */}
 
-          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
+          {/* System Management Section */}
+          <div className="grid gap-6 lg:grid-cols-2 px-6 lg:px-0">
+            {/* Recent Activity */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="bg-white rounded-xl border border-slate-200/60 p-5 shadow-sm hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">Recent Activity</h3>
+                    <p className="text-xs text-slate-600">System events and updates</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
+                  Live
+                </span>
+              </div>
+              
+              <div className="space-y-4">
+                {logs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-slate-100 rounded-lg mx-auto flex items-center justify-center mb-3">
+                      <Activity className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <p className="text-slate-500 font-medium">No recent activity</p>
+                    <p className="text-xs text-slate-400 mt-1">System events will appear here</p>
+                  </div>
+                ) : (
+                  logs.slice(0, 5).map((log, idx) => (
+                    <div key={log._id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-slate-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-slate-900 truncate">{log.action}</div>
+                        <div className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</div>
+                </div>
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
+                        {log.targetType}
+                      </span>
+                </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+
+            {/* Recent Admin Logs - moved to the right column */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 p-6 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
-                    <Activity className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-lg font-bold text-emerald-900">System Activity</h2>
-                </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
-                  Live
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200/50">
-                  <div className="text-xs font-medium text-blue-700 mb-1">Active Queries</div>
-                  <div className="text-2xl font-bold text-blue-900">{liveStats.activeQueries}</div>
-                </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200/50">
-                  <div className="text-xs font-medium text-purple-700 mb-1">Pending Recommendations</div>
-                  <div className="text-2xl font-bold text-purple-900">{liveStats.pendingRecommendations}</div>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 p-6 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                    <Leaf className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-lg font-bold text-emerald-900">Data Health</h2>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/50">
-                  <span className="text-sm font-medium text-red-700">Users with issues</span>
-                  <span className="text-lg font-bold text-red-900">{dataHealth.usersWithIssues}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
-                  <span className="text-sm font-medium text-amber-700">Missing soil profiles</span>
-                  <span className="text-lg font-bold text-amber-900">{dataHealth.usersMissingSoilProfile}</span>
-                </div>
-                {dataHealth.notes && (
-                  <p className="text-xs text-emerald-600 mt-2 p-3 bg-emerald-50 rounded-lg border border-emerald-200/50">{dataHealth.notes}</p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2 px-4 sm:px-0">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 p-6 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <h2 className="text-lg font-bold text-emerald-900">Admin Controls</h2>
-              </div>
-              <div className="space-y-3">
-                <button
-                  onClick={async () => { try { await api.post('/admin/ml/retrain'); alert('Retrain triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg shadow-emerald-500/30 group"
-                >
-                  <span className="font-semibold">Trigger Model Retrain</span>
-                  <Activity className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
-                </button>
-                <button
-                  onClick={async () => { try { await api.post('/admin/ml/refresh-recommendations'); alert('Refresh triggered'); } catch (e) { alert(e?.response?.data?.message || 'Failed'); } }}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/30 group"
-                >
-                  <span className="font-semibold">Refresh Recommendations</span>
-                  <TrendingUp className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button
-                  onClick={() => { window.open(`${api.defaults.baseURL}/admin/reports/analytics.csv`, '_blank'); }}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl hover:from-gray-800 hover:to-black transition-all shadow-lg shadow-gray-500/30 group"
-                >
-                  <span className="font-semibold">Download Analytics (CSV)</span>
-                  <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
-                  </svg>
-                </button>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
               className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <div className="flex items-center justify-between px-6 py-3 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg">
                     <Activity className="w-5 h-5 text-white" />
                   </div>
-                  <h2 className="text-lg font-bold text-emerald-900">Recent Admin Logs</h2>
+                  <h2 className="text-base font-bold text-emerald-900">Recent Admin Logs</h2>
                 </div>
               </div>
               <div className="divide-y divide-emerald-100 max-h-72 overflow-auto custom-scrollbar">
@@ -408,7 +438,7 @@ const AdminDashboard = () => {
                     <div className="w-12 h-12 bg-emerald-100 rounded-xl mx-auto flex items-center justify-center mb-3">
                       <Activity className="w-6 h-6 text-emerald-600" />
                     </div>
-                    <p className="text-emerald-700 font-medium">No logs yet</p>
+                    <p className="text-emerald-700 font-medium text-sm">No logs yet</p>
                     <p className="text-xs text-emerald-600 mt-1">Admin activity will appear here</p>
                   </div>
                 )}
@@ -422,7 +452,7 @@ const AdminDashboard = () => {
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        <div className="font-semibold text-emerald-900 mb-1">{log.action}</div>
+                        <div className="font-semibold text-emerald-900 mb-1 text-sm">{log.action}</div>
                         <div className="text-xs text-emerald-600 flex items-center gap-2">
                           <Calendar className="w-3 h-3" />
                           {new Date(log.createdAt).toLocaleString()}
@@ -445,21 +475,21 @@ const AdminDashboard = () => {
               transition={{ delay: 0.3 }}
               className="relative overflow-hidden bg-white/95 backdrop-blur-xl rounded-2xl border border-emerald-200/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <div className="flex items-center justify-between px-6 py-3 border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-teal-50">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg">
                     <UserPlus className="w-5 h-5 text-white" />
                   </div>
-                  <h2 className="text-lg font-bold text-emerald-900">Recent Users</h2>
+                  <h2 className="text-base font-bold text-emerald-900">Recent Users</h2>
                 </div>
               </div>
-              <div className="divide-y divide-emerald-100 max-h-72 overflow-auto custom-scrollbar">
+              <div className="divide-y divide-emerald-100 max-h-64 overflow-auto custom-scrollbar">
                 {recentUsers.length === 0 && (
                   <div className="p-6 text-center">
                     <div className="w-12 h-12 bg-emerald-100 rounded-xl mx-auto flex items-center justify-center mb-3">
                       <Users className="w-6 h-6 text-emerald-600" />
                     </div>
-                    <p className="text-emerald-700 font-medium">No users yet</p>
+                    <p className="text-emerald-700 font-medium text-sm">No users yet</p>
                   </div>
                 )}
                 {recentUsers.map((u, idx) => (
@@ -592,15 +622,6 @@ const AdminDashboard = () => {
               <div className="ag-card p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Government Schemes</h2>
                 <SchemeManagement />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'irrigation' && (
-            <div className="px-4 sm:px-0">
-              <div className="ag-card p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Irrigation Advisory</h2>
-                <p className="text-gray-600">Coming soon: schedules and regional insights.</p>
               </div>
             </div>
           )}

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import api from '../../services/api';
+import FieldSelector from '../../Components/FieldSelector';
 
 const SoilAnalyzer = () => {
   const [form, setForm] = useState({ 
@@ -12,7 +13,8 @@ const SoilAnalyzer = () => {
     phosphorus: '',
     potassium: '',
     soilType: '',
-    location: ''
+    location: '',
+    fieldId: ''
   });
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -126,7 +128,8 @@ const SoilAnalyzer = () => {
         phosphorus: form.phosphorus ? parseFloat(form.phosphorus) : null,
         potassium: form.potassium ? parseFloat(form.potassium) : null,
         soilType: form.soilType,
-        location: form.location
+        location: form.location,
+        fieldId: form.fieldId || null
       };
       
       // validate all before submit
@@ -444,6 +447,15 @@ const SoilAnalyzer = () => {
               onChange={handleChange} 
               className="w-full px-3 py-2 border rounded-lg border-[var(--ag-border)] focus:outline-none focus:ring-2 focus:ring-[var(--ag-primary-500)]" 
               placeholder={t.locationPh}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">Field (Optional)</label>
+            <FieldSelector
+              selectedFieldId={form.fieldId}
+              onFieldChange={(fieldId) => setForm({ ...form, fieldId })}
+              showAllOption={false}
             />
           </div>
 

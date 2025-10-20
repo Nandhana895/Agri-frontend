@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Calendar, Globe2, BookOpen, Cloud, X, ChevronRight, MapPin } from 'lucide-react';
+import { Home as HomeIcon, Leaf, Sprout, Calculator, FileText, MessageSquare, BarChart3, Bell, Menu, LogOut, User, Calendar, Globe2, BookOpen, Cloud, X, ChevronRight, MapPin, Layers } from 'lucide-react';
 import ManageProfileModal from '../Components/ManageProfileModal';
 import authService from '../services/authService';
 import config from '../config/config';
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/dashboard/fertilizer', label: 'Fertilizer Calculator', icon: Calculator, description: 'Calculate optimal fertilizer' },
   { to: '/dashboard/crop-profiles', label: 'Crop Profiles', icon: BarChart3, description: 'Detailed crop information' },
   { to: '/dashboard/farm-logbook', label: 'Farm Logbook', icon: BookOpen, description: 'Track farming activities' },
+  { to: '/dashboard/field-management', label: 'Field Management', icon: Layers, description: 'Manage your fields & plots' },
   { to: '/dashboard/sowing-calendar', label: 'Sowing Calendar', icon: Calendar, description: 'Plan your sowing seasons' },
   { to: '/dashboard/government-schemes', label: 'Government Schemes', icon: Globe2, description: 'Explore schemes & benefits' },
   { to: '/dashboard/weather-forecast', label: 'Weather Forecast', icon: Cloud, description: 'Local weather insights' },

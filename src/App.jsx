@@ -15,6 +15,7 @@ import GovernmentSchemes from './Pages/UserDashboard/GovernmentSchemes';
 import WeatherForecast from './Pages/UserDashboard/WeatherForecast';
 import Chatbox from './Pages/UserDashboard/Chatbox';
 import Reports from './Pages/UserDashboard/Reports';
+import FieldManagement from './Pages/UserDashboard/FieldManagement';
 import AdminDashboard from './Pages/AdminDashboard';
 import ExpertDashboard from './Pages/ExpertDashboard';
 import ForgotPassword from './Pages/ForgotPassword';
@@ -174,6 +175,7 @@ function App() {
             <Route path="fertilizer" element={<FertilizerCalculator />} />
             <Route path="crop-profiles" element={<CropProfiles />} />
             <Route path="farm-logbook" element={<FarmLogbook />} />
+            <Route path="field-management" element={<FieldManagement />} />
             <Route path="sowing-calendar" element={<SowingCalendar />} />
             <Route path="government-schemes" element={<GovernmentSchemes />} />
             <Route path="weather-forecast" element={<WeatherForecast />} />
