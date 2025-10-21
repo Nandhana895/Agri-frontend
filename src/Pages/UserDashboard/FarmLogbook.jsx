@@ -33,6 +33,7 @@ const FarmLogbook = () => {
     { value: 'Fertilizer', label: 'Fertilizer Application', icon: '🌿', color: 'yellow' },
     { value: 'Harvesting', label: 'Harvesting', icon: '🌾', color: 'orange' },
     { value: 'Government Scheme', label: 'Government Scheme', icon: '🏛️', color: 'indigo' },
+    { value: 'AI Recommendation', label: 'AI Recommendation', icon: '🤖', color: 'purple' },
     { value: 'Other', label: 'Other Activity', icon: '📝', color: 'gray' }
   ];
 

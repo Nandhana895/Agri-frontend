@@ -1,10 +1,16 @@
 // Configuration file for the application
 export const config = {
   // Backend API URL - change this to match your backend
-  API_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  API_URL: import.meta.env.VITE_API_URL || (() => {
+    console.warn('VITE_API_URL not set in environment variables. Please set VITE_API_URL in your .env file.');
+    return 'http://localhost:5000/api';
+  })(),
   
   // Frontend URL
-  FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || 'http://localhost:3000',
+  FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || (() => {
+    console.warn('VITE_FRONTEND_URL not set in environment variables. Please set VITE_FRONTEND_URL in your .env file.');
+    return 'http://localhost:5173';
+  })(),
   
   // API timeout in milliseconds
   API_TIMEOUT: 10000,

@@ -29,18 +29,20 @@ npm install axios react-router-dom
 
 ## Configuration
 
-### Backend API Setup
+### Environment Variables Setup
 
-1. **Update API URL**: Edit `src/config/config.js` to match your backend URL:
-```javascript
-API_URL: 'http://localhost:5000/api' // Change this to your backend URL
-```
+**Required**: Create a `.env` file in the root directory with the following variables:
 
-2. **Environment Variables** (optional): Create a `.env` file in the root directory:
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_FRONTEND_URL=http://localhost:3000
+VITE_FRONTEND_URL=http://localhost:5173
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
 ```
+
+**Important**: 
+- The application will show warnings in the console if these environment variables are not set
+- Update these URLs to match your actual backend and frontend URLs
+- For production, use your actual domain names instead of localhost
 
 ## Backend Requirements
 
@@ -111,7 +113,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Your frontend URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Your frontend URL
   credentials: true
 }));
 
