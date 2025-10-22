@@ -83,7 +83,7 @@ const Signup = ({ onClose, onSwitchToLogin, onAuthSuccess }) => {
   useEffect(() => {
     if (!googleReady) return;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
+    if (!clientId || clientId === 'your_google_client_id_here') return;
     try {
       window.google.accounts.id.initialize({
         client_id: clientId,

@@ -20,6 +20,12 @@ export const config = {
   
   // User storage key
   USER_KEY: 'user',
+  
+  // Google OAuth Client ID
+  GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || (() => {
+    console.warn('VITE_GOOGLE_CLIENT_ID not set in environment variables. Google OAuth will be disabled.');
+    return null;
+  })(),
 };
 
 export default config; 

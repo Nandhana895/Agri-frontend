@@ -213,7 +213,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="text-sm">
                     <div className="font-bold text-slate-900">28°C</div>
-                    <div className="text-sky-600 font-medium">Sunny</div>
+                    <div className="text-sky-600 font-medium">Cloudy</div>
                   </div>
                   <div className="text-xs text-sky-500">
                     <div>Humidity: 65%</div>

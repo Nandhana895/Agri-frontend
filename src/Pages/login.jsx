@@ -56,7 +56,7 @@ const Login = ({ onClose, onSwitchToSignup, onAuthSuccess }) => {
       if (window.google && window.google.accounts && window.google.accounts.id) {
         clearInterval(t);
         const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-        if (!clientId) return;
+        if (!clientId || clientId === 'your_google_client_id_here') return;
         try {
           window.google.accounts.id.initialize({
             client_id: clientId,

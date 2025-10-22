@@ -17,22 +17,20 @@ const FieldManagement = () => {
   
   // Form state
   const [formData, setFormData] = useState({
-    name: '',
-    size: '',
-    sizeUnit: 'acre',
-    soilType: 'Loam',
+    fieldName: '',
+    area: '',
+    areaUnit: 'acres',
+    soilType: 'Loamy',
     irrigationType: 'Rainfed',
-    currentCrop: '',
-    sowingDate: '',
+    crop: '',
+    plantingDate: '',
     expectedHarvestDate: '',
     location: {
       address: '',
-      coordinates: {
-        latitude: '',
-        longitude: ''
-      }
+      latitude: '',
+      longitude: ''
     },
-    notes: ''
+    description: ''
   });
 
   useEffect(() => {
@@ -100,10 +98,8 @@ const FieldManagement = () => {
             ...prev,
             location: {
               ...prev.location,
-              coordinates: {
-                latitude: position.coords.latitude.toFixed(6),
-                longitude: position.coords.longitude.toFixed(6)
-              }
+              latitude: position.coords.latitude.toFixed(6),
+              longitude: position.coords.longitude.toFixed(6)
             }
           }));
           setSuccess('Location captured successfully!');
@@ -129,11 +125,14 @@ const FieldManagement = () => {
       // Clean up empty values
       const cleanData = { ...formData };
       if (!cleanData.location.address) delete cleanData.location.address;
-      if (!cleanData.location.coordinates.latitude) delete cleanData.location.coordinates;
-      if (!cleanData.currentCrop) delete cleanData.currentCrop;
-      if (!cleanData.sowingDate) delete cleanData.sowingDate;
+      if (!cleanData.location.latitude || !cleanData.location.longitude) {
+        delete cleanData.location.latitude;
+        delete cleanData.location.longitude;
+      }
+      if (!cleanData.crop) delete cleanData.crop;
+      if (!cleanData.plantingDate) delete cleanData.plantingDate;
       if (!cleanData.expectedHarvestDate) delete cleanData.expectedHarvestDate;
-      if (!cleanData.notes) delete cleanData.notes;
+      if (!cleanData.description) delete cleanData.description;
       
       let response;
       if (editingField) {
@@ -165,22 +164,20 @@ const FieldManagement = () => {
   const handleEdit = (field) => {
     setEditingField(field);
     setFormData({
-      name: field.name,
-      size: field.size,
-      sizeUnit: field.sizeUnit,
+      fieldName: field.fieldName,
+      area: field.area,
+      areaUnit: field.areaUnit,
       soilType: field.soilType,
-      irrigationType: field.irrigationType,
-      currentCrop: field.currentCrop || '',
-      sowingDate: field.sowingDate ? field.sowingDate.split('T')[0] : '',
+      irrigationType: field.irrigationType || 'Rainfed',
+      crop: field.crop || '',
+      plantingDate: field.plantingDate ? field.plantingDate.split('T')[0] : '',
       expectedHarvestDate: field.expectedHarvestDate ? field.expectedHarvestDate.split('T')[0] : '',
       location: {
         address: field.location?.address || '',
-        coordinates: {
-          latitude: field.location?.coordinates?.latitude || '',
-          longitude: field.location?.coordinates?.longitude || ''
-        }
+        latitude: field.location?.latitude || '',
+        longitude: field.location?.longitude || ''
       },
-      notes: field.notes || ''
+      description: field.description || ''
     });
     setShowForm(true);
   };
@@ -208,22 +205,20 @@ const FieldManagement = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      size: '',
-      sizeUnit: 'acre',
-      soilType: 'Loam',
+      fieldName: '',
+      area: '',
+      areaUnit: 'acres',
+      soilType: 'Loamy',
       irrigationType: 'Rainfed',
-      currentCrop: '',
-      sowingDate: '',
+      crop: '',
+      plantingDate: '',
       expectedHarvestDate: '',
       location: {
         address: '',
-        coordinates: {
-          latitude: '',
-          longitude: ''
-        }
+        latitude: '',
+        longitude: ''
       },
-      notes: ''
+      description: ''
     });
     setEditingField(null);
     setShowForm(false);
@@ -333,8 +328,8 @@ const FieldManagement = () => {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="fieldName"
+                    value={formData.fieldName}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -350,8 +345,8 @@ const FieldManagement = () => {
                   <div className="flex gap-2">
                     <input
                       type="number"
-                      name="size"
-                      value={formData.size}
+                      name="area"
+                      value={formData.area}
                       onChange={handleInputChange}
                       required
                       step="0.01"
@@ -360,8 +355,8 @@ const FieldManagement = () => {
                       placeholder="Enter size"
                     />
                     <select
-                      name="sizeUnit"
-                      value={formData.sizeUnit}
+                      name="areaUnit"
+                      value={formData.areaUnit}
                       onChange={handleInputChange}
                       className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     >
@@ -413,8 +408,8 @@ const FieldManagement = () => {
                   </label>
                   <input
                     type="text"
-                    name="currentCrop"
-                    value={formData.currentCrop}
+                    name="crop"
+                    value={formData.crop}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="e.g., Rice, Wheat"
@@ -428,8 +423,8 @@ const FieldManagement = () => {
                   </label>
                   <input
                     type="date"
-                    name="sowingDate"
-                    value={formData.sowingDate}
+                    name="plantingDate"
+                    value={formData.plantingDate}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
@@ -473,8 +468,8 @@ const FieldManagement = () => {
                   </label>
                   <input
                     type="number"
-                    name="location.coordinates.latitude"
-                    value={formData.location.coordinates.latitude}
+                    name="location.latitude"
+                    value={formData.location.latitude}
                     onChange={handleInputChange}
                     step="0.000001"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -487,8 +482,8 @@ const FieldManagement = () => {
                   </label>
                   <input
                     type="number"
-                    name="location.coordinates.longitude"
-                    value={formData.location.coordinates.longitude}
+                    name="location.longitude"
+                    value={formData.location.longitude}
                     onChange={handleInputChange}
                     step="0.000001"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -513,8 +508,8 @@ const FieldManagement = () => {
                   Notes
                 </label>
                 <textarea
-                  name="notes"
-                  value={formData.notes}
+                  name="description"
+                  value={formData.description}
                   onChange={handleInputChange}
                   rows="3"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"

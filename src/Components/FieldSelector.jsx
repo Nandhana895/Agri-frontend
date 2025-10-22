@@ -15,7 +15,7 @@ const FieldSelector = ({ selectedFieldId, onFieldChange, showAllOption = true, c
   const fetchFields = async () => {
     try {
       const token = localStorage.getItem(config.TOKEN_KEY);
-      const response = await axios.get(`${config.API_URL}/fields?active=true`, {
+      const response = await axios.get(`${config.API_URL}/farmer/fields?active=true`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
