@@ -248,40 +248,18 @@ const Home = () => {
   const firstName = (user?.name || 'Farmer').split(' ')[0];
   const [dashboardData, setDashboardData] = useState({
     stats: {
-      activeFields: 12,
-      soilTests: 8,
-      recommendations: 15,
-      irrigationEvents: 24,
-      yield: 85,
-      costSavings: 12
+      activeFields: 0,
+      soilTests: 0,
+      recommendations: 0,
+      irrigationEvents: 0,
+      yield: 0,
+      costSavings: 0
     },
-    recentRecommendations: [
-      { title: "Irrigation Schedule Update", priority: "high", description: "Adjust irrigation frequency based on recent rainfall patterns", action: "Update Schedule" },
-      { title: "Fertilizer Application", priority: "medium", description: "Apply nitrogen fertilizer to Field A-3 for optimal growth", action: "Schedule Application" },
-      { title: "Pest Monitoring", priority: "low", description: "Regular pest monitoring shows healthy crop conditions", action: "View Report" }
-    ],
-    recentActivities: [
-      { title: "Soil test completed for Field B-2", time: "2 hours ago", type: "soil" },
-      { title: "Irrigation system activated", time: "4 hours ago", type: "irrigation" },
-      { title: "Crop recommendation generated", time: "1 day ago", type: "recommendation" },
-      { title: "Weather alert received", time: "2 days ago", type: "weather" }
-    ],
-    upcomingTasks: [
-      { title: "Fertilizer application - Field A-1", dueDate: "Tomorrow", priority: "high" },
-      { title: "Soil sampling - Field C-3", dueDate: "In 3 days", priority: "medium" },
-      { title: "Equipment maintenance", dueDate: "Next week", priority: "low" }
-    ],
-    soilHealth: {
-      ph: 6.8,
-      nitrogen: "Optimal",
-      phosphorus: "Good",
-      potassium: "Excellent"
-    },
-    marketData: {
-      corn: { price: 245, trend: 2.3 },
-      wheat: { price: 312, trend: -1.2 },
-      soybeans: { price: 189, trend: 0.8 }
-    }
+    recentRecommendations: [],
+    recentActivities: [],
+    upcomingTasks: [],
+    soilHealth: null,
+    marketData: {}
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -443,42 +421,42 @@ const Home = () => {
 
       {/* Farm Overview */}
       <FarmOverviewCard 
-        fields={dashboardData.stats.activeFields}
-        crops={5}
-        health={92}
+        fields={dashboardData?.stats?.activeFields || 0}
+        crops={dashboardData?.stats?.totalCrops || 0}
+        health={dashboardData?.stats?.healthScore || 0}
       />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 ag-fade-up">
         <MetricCard
           label="Active Fields"
-          value={dashboardData.stats.activeFields}
+          value={dashboardData.stats?.activeFields || 0}
           unit="fields"
-          trend={5}
+          trend={dashboardData.stats?.activeFieldsTrend}
           icon={<svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" /></svg>}
           color="green"
         />
         <MetricCard
           label="Soil Tests"
-          value={dashboardData.stats.soilTests}
+          value={dashboardData.stats?.soilTests || 0}
           unit="completed"
-          trend={12}
+          trend={dashboardData.stats?.soilTestsTrend}
           icon={<svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
           color="blue"
         />
         <MetricCard
           label="Yield Potential"
-          value={dashboardData.stats.yield}
+          value={dashboardData.stats?.yield || 0}
           unit="%"
-          trend={8}
+          trend={dashboardData.stats?.yieldTrend}
           icon={<svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
           color="yellow"
         />
         <MetricCard
           label="Cost Savings"
-          value={dashboardData.stats.costSavings}
+          value={dashboardData.stats?.costSavings || 0}
           unit="%"
-          trend={15}
+          trend={dashboardData.stats?.costSavingsTrend}
           icon={<svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>}
           color="purple"
         />
@@ -489,28 +467,28 @@ const Home = () => {
               <p className="text-xs tracking-wide text-gray-500">Field Utilization</p>
               <p className="text-sm font-semibold text-gray-900 mt-1">Current season</p>
             </div>
-            <div className="ag-kpi-ring" style={{ ['--value']: 78 }}><span>78%</span></div>
+            <div className="ag-kpi-ring" style={{ ['--value']: dashboardData.stats?.fieldUtilization || 0 }}><span>{dashboardData.stats?.fieldUtilization || 0}%</span></div>
           </div>
           <div className="ag-card p-5 flex items-center justify-between">
             <div>
               <p className="text-xs tracking-wide text-gray-500">Water Efficiency</p>
               <p className="text-sm font-semibold text-gray-900 mt-1">Irrigation</p>
             </div>
-            <div className="ag-kpi-ring" style={{ ['--value']: 64 }}><span>64%</span></div>
+            <div className="ag-kpi-ring" style={{ ['--value']: dashboardData.stats?.waterEfficiency || 0 }}><span>{dashboardData.stats?.waterEfficiency || 0}%</span></div>
           </div>
           <div className="ag-card p-5 flex items-center justify-between">
             <div>
               <p className="text-xs tracking-wide text-gray-500">Soil Readiness</p>
               <p className="text-sm font-semibold text-gray-900 mt-1">Next sowing</p>
             </div>
-            <div className="ag-kpi-ring" style={{ ['--value']: 88 }}><span>88%</span></div>
+            <div className="ag-kpi-ring" style={{ ['--value']: dashboardData.stats?.soilReadiness || 0 }}><span>{dashboardData.stats?.soilReadiness || 0}%</span></div>
           </div>
           <div className="ag-card p-5 flex items-center justify-between">
             <div>
               <p className="text-xs tracking-wide text-gray-500">Pest Risk</p>
               <p className="text-sm font-semibold text-gray-900 mt-1">Regional</p>
             </div>
-            <div className="ag-kpi-ring" style={{ ['--value']: 22 }}><span>Low</span></div>
+            <div className="ag-kpi-ring" style={{ ['--value']: dashboardData.stats?.pestRisk || 0 }}><span>{dashboardData.stats?.pestRisk ? `${dashboardData.stats.pestRisk}%` : 'N/A'}</span></div>
           </div>
         </div>
       </div>
@@ -528,15 +506,23 @@ const Home = () => {
             icon={<svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>}
           >
             <div className="space-y-4">
-              {(dashboardData.recentRecommendations || []).map((rec, index) => (
-                <RecommendationCard
-                  key={index}
-                  title={rec.title}
-                  priority={rec.priority}
-                  description={rec.description}
-                  action={rec.action}
-                />
-              ))}
+              {(!dashboardData.recentRecommendations || dashboardData.recentRecommendations.length === 0) ? (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <p className="text-gray-500 font-medium">No active recommendations</p>
+                  <p className="text-gray-400 text-xs mt-1">Your action items will appear here.</p>
+                </div>
+              ) : (
+                dashboardData.recentRecommendations.map((rec, index) => (
+                  <RecommendationCard
+                    key={index}
+                    title={rec.title}
+                    priority={rec.priority}
+                    description={rec.description}
+                    action={rec.action}
+                  />
+                ))
+              )}
             </div>
           </AgriculturalCard>
 
@@ -546,24 +532,32 @@ const Home = () => {
             icon={<svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>}
           >
             <div className="space-y-4">
-              {(dashboardData.recentActivities || []).map((activity, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    activity.type === 'soil' ? 'bg-green-100' :
-                    activity.type === 'irrigation' ? 'bg-blue-100' :
-                    activity.type === 'recommendation' ? 'bg-yellow-100' :
-                    'bg-gray-100'
-                  }`}>
-                    <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
+              {(!dashboardData.recentActivities || dashboardData.recentActivities.length === 0) ? (
+                <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <svg className="w-10 h-10 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <p className="text-gray-500 font-medium">No recent activity</p>
+                  <p className="text-gray-400 text-xs mt-1">Your farm event log will appear here.</p>
                 </div>
-              ))}
+              ) : (
+                dashboardData.recentActivities.map((activity, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      activity.type === 'soil' ? 'bg-green-100' :
+                      activity.type === 'irrigation' ? 'bg-blue-100' :
+                      activity.type === 'recommendation' ? 'bg-yellow-100' :
+                      'bg-gray-100'
+                    }`}>
+                      <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      <p className="text-xs text-gray-500">{activity.time}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </AgriculturalCard>
         </div>

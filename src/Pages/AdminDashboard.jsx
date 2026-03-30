@@ -104,14 +104,16 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [now, setNow] = useState(() => new Date());
 
+  // New variables for pagination and system health
+  const [usersPage, setUsersPage] = useState(1);
+  const [systemOnline, setSystemOnline] = useState(true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await api.get('/admin/overview');
         setStats(res.data?.stats || {});
         setRecentUsers(res.data?.recentUsers || []);
-        const usersRes = await api.get('/admin/users?limit=50');
-        setAllUsers(usersRes.data?.users || []);
         const [statsRes, healthRes, logsRes] = await Promise.all([
           api.get('/admin/stats'),
           api.get('/admin/data-health'),
@@ -131,10 +133,25 @@ const AdminDashboard = () => {
       try {
         const statsRes = await api.get('/admin/stats');
         setLiveStats(statsRes.data?.stats || {});
-      } catch (_) {}
+        setSystemOnline(true);
+      } catch (_) {
+        setSystemOnline(false);
+      }
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const usersRes = await api.get(`/admin/users?limit=10&page=${usersPage}`);
+        setAllUsers(usersRes.data?.users || []);
+      } catch (e) {
+        console.error('Failed to fetch users', e);
+      }
+    };
+    fetchAllUsers();
+  }, [usersPage]);
 
   // Keep current date fresh (minute precision is enough)
   useEffect(() => {
@@ -204,6 +221,12 @@ const AdminDashboard = () => {
 
               {/* Right Section - Professional Agricultural Controls */}
               <div className="flex items-center gap-4">
+                {/* System Status Indicator */}
+                <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${systemOnline ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                  <span className={`w-2 h-2 rounded-full ${systemOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></span>
+                  {systemOnline ? 'System Online' : 'System Offline'}
+                </div>
+
                 {/* Enhanced Weather Widget */}
                 <div className="hidden md:flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-sky-50 via-blue-50 to-cyan-50 border-2 border-sky-200/60 shadow-lg shadow-sky-500/10">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
@@ -233,7 +256,7 @@ const AdminDashboard = () => {
                     </div>
                     <div className="hidden sm:block text-left">
                       <div className="text-sm font-bold text-emerald-900">{user?.name || 'Administrator'}</div>
-                      <div className="text-xs text-emerald-600 font-semibold">System Administrator</div>
+                      <div className="text-xs text-emerald-600 font-semibold">{user?.email || 'System Administrator'}</div>
                     </div>
                     <ChevronDown className={`w-5 h-5 text-emerald-500 transition-transform duration-300 ${profileOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -255,7 +278,7 @@ const AdminDashboard = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-bold text-emerald-900 truncate">{user?.name || 'Administrator'}</div>
-                              <div className="text-xs text-emerald-600 truncate">{user?.email}</div>
+                              <div className="text-xs text-emerald-600 truncate">{user?.email || 'No email provided'}</div>
                               <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-white text-xs font-medium">
                                 <Shield className="w-3 h-3 mr-1" />
                                 Admin
@@ -318,11 +341,11 @@ const AdminDashboard = () => {
               icon={Users} 
               color="emerald" 
               trend={12}
-              subtitle="Registered farmers"
+              subtitle={`Includes ${stats.adminCount || 0} admins`}
               description="Active agricultural community"
             />
             <StatCard 
-              label="Active Fields" 
+              label="Active Users" 
               value={liveStats.activeUsers || 0} 
               icon={() => (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,8 +354,8 @@ const AdminDashboard = () => {
               )} 
               color="blue" 
               trend={8}
-              subtitle="Fields under cultivation"
-              description="Currently monitored fields"
+              subtitle="Currently online users"
+              description="Users actively engaged"
             />
             <StatCard 
               label="Expert Queries" 
@@ -349,16 +372,16 @@ const AdminDashboard = () => {
             />
             <StatCard 
               label="System Health" 
-              value="98%" 
+              value={systemOnline ? "100%" : "Offline"} 
               icon={() => (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               )} 
-              color="amber" 
-              trend={2}
-              subtitle="Platform uptime"
-              description="All agricultural systems operational"
+              color={systemOnline ? "amber" : "red"} 
+              trend={systemOnline ? 2 : 0}
+              subtitle={systemOnline ? "System operational" : "Connection lost"}
+              description="Backend infrastructure status"
             />
           </div>
 
@@ -366,7 +389,7 @@ const AdminDashboard = () => {
 
           {/* System Management Section */}
           <div className="grid gap-6 lg:grid-cols-2 px-6 lg:px-0">
-            {/* Recent Activity */}
+            {/* Data Health Insights */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -375,44 +398,47 @@ const AdminDashboard = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 text-white flex items-center justify-center">
-                    <Activity className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center">
+                    <Shield className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900">Recent Activity</h3>
-                    <p className="text-xs text-slate-600">System events and updates</p>
+                    <h3 className="text-base font-semibold text-slate-900">Data Health Insights</h3>
+                    <p className="text-xs text-slate-600">Overview of user data integrity</p>
                   </div>
                 </div>
-                <span className="inline-flex items-center px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span>
-                  Live
-                </span>
               </div>
               
               <div className="space-y-4">
-                {logs.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-slate-100 rounded-lg mx-auto flex items-center justify-center mb-3">
-                      <Activity className="w-6 h-6 text-slate-400" />
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                     </div>
-                    <p className="text-slate-500 font-medium">No recent activity</p>
-                    <p className="text-xs text-slate-400 mt-1">System events will appear here</p>
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">Users With Issues</div>
+                      <div className="text-xs text-slate-500">Accounts requiring attention</div>
+                    </div>
                   </div>
-                ) : (
-                  logs.slice(0, 5).map((log, idx) => (
-                    <div key={log._id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-slate-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-slate-900 truncate">{log.action}</div>
-                        <div className="text-xs text-slate-500">{new Date(log.createdAt).toLocaleString()}</div>
+                  <div className="text-lg font-bold text-slate-800">{dataHealth.usersWithIssues || 0}</div>
                 </div>
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
-                        {log.targetType}
-                      </span>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                      <Leaf className="w-4 h-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">Missing Soil Profiles</div>
+                      <div className="text-xs text-slate-500">Farmers without soil data</div>
+                    </div>
+                  </div>
+                  <div className="text-lg font-bold text-slate-800">{dataHealth.usersMissingSoilProfile || 0}</div>
                 </div>
-                  ))
+                
+                {dataHealth.notes && (
+                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                    <div className="text-xs text-blue-800 font-medium">{dataHealth.notes}</div>
+                  </div>
                 )}
               </div>
             </motion.div>
@@ -454,7 +480,9 @@ const AdminDashboard = () => {
                       <div className="flex-1">
                         <div className="font-semibold text-emerald-900 mb-1 text-sm">{log.action}</div>
                         <div className="text-xs text-emerald-600 flex items-center gap-2">
-                          <Calendar className="w-3 h-3" />
+                          <UserIcon className="w-3 h-3" />
+                          <span className="font-medium">{log.adminName || log.performedBy || 'System Admin'}</span>
+                          <Calendar className="w-3 h-3 ml-1" />
                           {new Date(log.createdAt).toLocaleString()}
                         </div>
                       </div>
@@ -582,6 +610,23 @@ const AdminDashboard = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between px-6 py-3 border-t border-emerald-100 bg-emerald-50/50">
+                <button 
+                  onClick={() => setUsersPage(p => Math.max(1, p - 1))}
+                  disabled={usersPage === 1}
+                  className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <div className="text-xs text-emerald-600 font-medium">Page {usersPage}</div>
+                <button 
+                  onClick={() => setUsersPage(p => p + 1)}
+                  disabled={allUsers.length < 10}
+                  className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-white border border-emerald-200 rounded-lg hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             </motion.div>
           </div>
